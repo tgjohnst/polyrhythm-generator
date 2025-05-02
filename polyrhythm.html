@@ -19,7 +19,7 @@
             justify-content: center;
             align-items: center;
             width: 90%;
-            max-width: 800px; /* Increased max size for more rings */
+            max-width: 800px;
             aspect-ratio: 1 / 1;
             margin: 1rem auto;
         }
@@ -30,16 +30,15 @@
         }
         .path-circle {
             fill: none;
-            stroke-width: 1px; /* Thinner paths for many rhythms */
+            stroke-width: 1px;
             stroke-dasharray: 3 2;
-            opacity: 0.3; /* Even lower opacity */
+            opacity: 0.3;
         }
         .beat-dot {
             stroke: #eee;
             stroke-width: 0.5px;
-            /* Adjust dot size based on number of rhythms? Maybe later */
         }
-        /* Focus rings for accessibility */
+        /* Focus rings */
         input[type="range"]:focus, select:focus, input[type="checkbox"]:focus {
             outline: 2px solid transparent;
             outline-offset: 2px;
@@ -54,7 +53,7 @@
             flex-grow: 1;
             min-width: 50px;
         }
-        /* Style select dropdown for dark mode */
+        /* Style select dropdown */
         select {
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
             background-position: right 0.5rem center;
@@ -77,6 +76,7 @@
             vertical-align: middle;
             position: relative;
             cursor: pointer;
+            flex-shrink: 0; /* Prevent checkbox from shrinking */
         }
         input[type="checkbox"]:checked {
             background-color: #60a5fa; /* blue-400 */
@@ -109,54 +109,66 @@
             Start
         </button>
 
-        <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="p-3 border border-gray-700 rounded-md flex flex-col space-y-2">
-                <label for="tempo" class="font-medium text-sm whitespace-nowrap text-gray-200">Tempo (BPM): <span id="tempoValue" class="font-bold text-indigo-400">120.0</span></label>
-                <input type="range" id="tempo" min="1" max="240" value="120" step="0.1" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
-            </div>
-            <div class="p-3 border border-gray-700 rounded-md flex flex-col space-y-2">
-                <label for="volume" class="font-medium text-sm whitespace-nowrap text-gray-200">Volume: <span id="volumeValue" class="font-bold text-indigo-400">0.50</span></label>
-                <input type="range" id="volume" min="0" max="1" value="0.5" step="0.05" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
-            </div>
-            <div class="p-3 border border-gray-700 rounded-md flex flex-col space-y-2">
-                <label for="numRhythms" class="font-medium text-sm whitespace-nowrap text-gray-200">Number of Rhythms: <span id="numRhythmsValue" class="font-bold text-indigo-400">2</span></label>
-                <input type="range" id="numRhythms" min="1" max="32" value="2" step="1" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+        <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="flex flex-col space-y-4">
+                <div class="p-3 border border-gray-700 rounded-md flex flex-col space-y-2">
+                    <label for="tempo" class="font-medium text-sm whitespace-nowrap text-gray-200">Tempo (BPM): <span id="tempoValue" class="font-bold text-indigo-400">120.0</span></label>
+                    <input type="range" id="tempo" min="1" max="240" value="120" step="0.1" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+                </div>
+                <div class="p-3 border border-gray-700 rounded-md flex flex-col space-y-2">
+                    <label for="volume" class="font-medium text-sm whitespace-nowrap text-gray-200">Volume: <span id="volumeValue" class="font-bold text-indigo-400">0.50</span></label>
+                    <input type="range" id="volume" min="0" max="1" value="0.5" step="0.05" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+                </div>
             </div>
 
-            <div class="p-3 border border-gray-700 rounded-md flex flex-col space-y-3">
-                <span class="font-medium text-sm text-gray-200">Sound Waveforms:</span>
-                <div class="flex items-center space-x-2">
-                     <label for="soundType1" class="text-sm text-gray-300 flex-shrink-0">Wave 1:</label>
-                     <select id="soundType1" class="flex-grow p-1 text-sm border border-gray-600 bg-gray-700 text-gray-100 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                         <option value="sine" selected>Sine</option>
-                         <option value="square">Square</option>
-                         <option value="sawtooth">Sawtooth</option>
-                         <option value="triangle">Triangle</option>
-                     </select>
+            <div class="flex flex-col space-y-4">
+                <div class="p-3 border border-gray-700 rounded-md flex flex-col space-y-2">
+                    <label for="numRhythms" class="font-medium text-sm whitespace-nowrap text-gray-200">Number of Rhythms: <span id="numRhythmsValue" class="font-bold text-indigo-400">2</span></label>
+                    <input type="range" id="numRhythms" min="1" max="32" value="2" step="1" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+                </div>
+                <div class="p-3 border border-gray-700 rounded-md flex flex-col space-y-3">
+                    <span class="font-medium text-sm text-gray-200">Sound Waveforms:</span>
+                    <div class="flex items-center space-x-2">
+                         <label for="soundType1" class="text-xs text-gray-300 flex-shrink-0 w-10">Wave 1:</label>
+                         <select id="soundType1" class="flex-grow p-1 text-xs border border-gray-600 bg-gray-700 text-gray-100 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                             <option value="sine" selected>Sine</option> <option value="square">Square</option> <option value="sawtooth">Sawtooth</option> <option value="triangle">Triangle</option>
+                         </select>
+                    </div>
+                     <div class="flex items-center space-x-2">
+                         <label for="soundType2" class="text-xs text-gray-300 flex-shrink-0 w-10">Wave 2:</label>
+                         <select id="soundType2" class="flex-grow p-1 text-xs border border-gray-600 bg-gray-700 text-gray-100 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                             <option value="sine">Sine</option> <option value="square" selected>Square</option> <option value="sawtooth">Sawtooth</option> <option value="triangle">Triangle</option>
+                         </select>
+                         <input type="checkbox" id="soundType2Enabled" class="form-checkbox h-4 w-4 text-blue-500 rounded border-gray-500 bg-gray-600 focus:ring-blue-400">
+                         <label for="soundType2Enabled" class="text-xs text-gray-400">Enable</label>
+                    </div>
+                     <div class="flex items-center space-x-2">
+                         <label for="soundType3" class="text-xs text-gray-300 flex-shrink-0 w-10">Wave 3:</label>
+                         <select id="soundType3" class="flex-grow p-1 text-xs border border-gray-600 bg-gray-700 text-gray-100 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                             <option value="sine">Sine</option> <option value="square">Square</option> <option value="sawtooth" selected>Sawtooth</option> <option value="triangle">Triangle</option>
+                         </select>
+                         <input type="checkbox" id="soundType3Enabled" class="form-checkbox h-4 w-4 text-blue-500 rounded border-gray-500 bg-gray-600 focus:ring-blue-400">
+                         <label for="soundType3Enabled" class="text-xs text-gray-400">Enable</label>
+                    </div>
+                </div>
+             </div>
+
+             <div class="p-3 border border-gray-700 rounded-md flex flex-col space-y-4">
+                 <div class="flex items-center justify-between">
+                     <span class="font-medium text-sm text-gray-200">Echo Effect:</span>
+                     <div class="flex items-center space-x-2">
+                         <input type="checkbox" id="echoEnabled" class="form-checkbox h-4 w-4 text-blue-500 rounded border-gray-500 bg-gray-600 focus:ring-blue-400">
+                         <label for="echoEnabled" class="text-xs text-gray-400">Enable</label>
                      </div>
-                 <div class="flex items-center space-x-2">
-                     <label for="soundType2" class="text-sm text-gray-300 flex-shrink-0">Wave 2:</label>
-                     <select id="soundType2" class="flex-grow p-1 text-sm border border-gray-600 bg-gray-700 text-gray-100 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                         <option value="sine">Sine</option>
-                         <option value="square" selected>Square</option>
-                         <option value="sawtooth">Sawtooth</option>
-                         <option value="triangle">Triangle</option>
-                     </select>
-                     <input type="checkbox" id="soundType2Enabled" class="form-checkbox h-4 w-4 text-blue-500 rounded border-gray-500 bg-gray-600 focus:ring-blue-400">
-                     <label for="soundType2Enabled" class="text-xs text-gray-400">Enable</label>
-                </div>
-                 <div class="flex items-center space-x-2">
-                     <label for="soundType3" class="text-sm text-gray-300 flex-shrink-0">Wave 3:</label>
-                     <select id="soundType3" class="flex-grow p-1 text-sm border border-gray-600 bg-gray-700 text-gray-100 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                         <option value="sine">Sine</option>
-                         <option value="square">Square</option>
-                         <option value="sawtooth" selected>Sawtooth</option>
-                         <option value="triangle">Triangle</option>
-                     </select>
-                     <input type="checkbox" id="soundType3Enabled" class="form-checkbox h-4 w-4 text-blue-500 rounded border-gray-500 bg-gray-600 focus:ring-blue-400">
-                     <label for="soundType3Enabled" class="text-xs text-gray-400">Enable</label>
-                </div>
-            </div>
+                 </div>
+                 <div class="flex flex-col space-y-2">
+                     <label for="echoDelay" class="font-medium text-xs whitespace-nowrap text-gray-300">Delay Time (s): <span id="echoDelayValue" class="font-bold text-teal-400">0.30</span></label>
+                     <input type="range" id="echoDelay" min="0.01" max="1.0" value="0.3" step="0.01" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+                 </div>
+                 <div class="flex flex-col space-y-2">
+                     <label for="echoFeedback" class="font-medium text-xs whitespace-nowrap text-gray-300">Feedback: <span id="echoFeedbackValue" class="font-bold text-teal-400">0.40</span></label>
+                     <input type="range" id="echoFeedback" min="0" max="0.85" value="0.4" step="0.01" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"> </div>
+             </div>
         </div>
 
 
@@ -184,44 +196,39 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- Constants and Colors ---
-            // *** MODIFIED: MAX_RHYTHMS = 32 ***
             const MAX_RHYTHMS = 32;
             const scheduleAheadTime = 0.1;
             const schedulerFrequency = 25;
             const noteDuration = 0.05;
-            // *** MODIFIED: Expanded RHYTHM_COLORS to 32 ***
-            // Using HSL color generation for more systematic variation
+            // *** ADDED: Waveform delays ***
+            const WAVEFORM_2_DELAY = 0.008; // Small delay in seconds
+            const WAVEFORM_3_DELAY = 0.016; // Slightly larger delay
+
             function generateHslColors(count) {
+                // ... (HSL generation function remains the same)
                 const colors = [];
-                const saturation = 70; // 0-100
-                const lightness = 60;  // 0-100 (adjust for dark mode visibility)
+                const saturation = 70;
+                const lightness = 60;
                 for (let i = 0; i < count; i++) {
                     const hue = Math.round((i * (360 / count))) % 360;
-                    const hex = `hsl(${hue}, ${saturation}%, ${lightness}%)`; // Use HSL directly for fill/stroke
-                    // Generate approximate Tailwind classes (might not be perfect matches)
-                    // This part is complex, using direct HSL might be better
-                    const baseHue = Math.round(hue / 30) * 30; // Approximate hue step
-                    let colorName = 'gray'; // Default
+                    const hex = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+                    const baseHue = Math.round(hue / 30) * 30;
+                    let colorName = 'gray';
                     if (baseHue === 0 || baseHue === 360) colorName = 'red';
                     else if (baseHue === 30) colorName = 'orange';
-                    else if (baseHue === 60) colorName = 'yellow'; // Tailwind doesn't have amber directly like this
-                    else if (baseHue === 90 || baseHue === 120) colorName = 'lime'; // Or green
-                    else if (baseHue === 150) colorName = 'emerald'; // Or teal
+                    else if (baseHue === 60) colorName = 'yellow';
+                    else if (baseHue === 90 || baseHue === 120) colorName = 'lime';
+                    else if (baseHue === 150) colorName = 'emerald';
                     else if (baseHue === 180) colorName = 'cyan';
-                    else if (baseHue === 210) colorName = 'sky'; // Or blue
+                    else if (baseHue === 210) colorName = 'sky';
                     else if (baseHue === 240) colorName = 'indigo';
-                    else if (baseHue === 270) colorName = 'purple'; // Or violet
+                    else if (baseHue === 270) colorName = 'purple';
                     else if (baseHue === 300) colorName = 'fuchsia';
-                    else if (baseHue === 330) colorName = 'pink'; // Or rose
+                    else if (baseHue === 330) colorName = 'pink';
 
                     colors.push({
-                        name: `${colorName}-${hue}`, // Unique name based on hue
-                        hex: hex, // Store the precise HSL color string
-                        // Tailwind classes for UI elements (approximations)
-                        bg: `bg-${colorName}-900`,
-                        border: `border-${colorName}-500`,
-                        text: `text-${colorName}-400`,
-                        slider: `bg-${colorName}-700`
+                        name: `${colorName}-${hue}`, hex: hex, bg: `bg-${colorName}-900`,
+                        border: `border-${colorName}-500`, text: `text-${colorName}-400`, slider: `bg-${colorName}-700`
                     });
                 }
                 return colors;
@@ -232,6 +239,13 @@
             // --- Audio Setup ---
             let audioContext;
             let masterGain;
+            // *** ADDED: Echo nodes ***
+            let echoDelayNode;
+            let echoFeedbackGainNode;
+            let echoEnabled = false; // State for echo toggle
+            let echoDelayTime = 0.3;
+            let echoFeedbackAmount = 0.4;
+
             let isPlaying = false;
             let schedulerIntervalId = null;
             let animationFrameId = null;
@@ -241,12 +255,11 @@
             let tempo = 120.0;
             let volume = 0.5;
             let numActiveRhythms = 2;
-            // *** ADDED: Parameters for multiple waveforms ***
             let soundType1 = 'sine';
             let soundType2 = 'square';
             let soundType3 = 'sawtooth';
-            let soundType2Enabled = false; // Default disabled
-            let soundType3Enabled = false; // Default disabled
+            let soundType2Enabled = false;
+            let soundType3Enabled = false;
             let cycleDuration = 60.0 / tempo;
             let rhythmParams = [];
 
@@ -269,12 +282,17 @@
             const volumeValueSpan = document.getElementById('volumeValue');
             const numRhythmsSlider = document.getElementById('numRhythms');
             const numRhythmsValueSpan = document.getElementById('numRhythmsValue');
-            // *** ADDED: Waveform control references ***
             const soundType1Select = document.getElementById('soundType1');
             const soundType2Select = document.getElementById('soundType2');
             const soundType3Select = document.getElementById('soundType3');
             const soundType2EnabledCheckbox = document.getElementById('soundType2Enabled');
             const soundType3EnabledCheckbox = document.getElementById('soundType3Enabled');
+            // *** ADDED: Echo control references ***
+            const echoEnabledCheckbox = document.getElementById('echoEnabled');
+            const echoDelaySlider = document.getElementById('echoDelay');
+            const echoDelayValueSpan = document.getElementById('echoDelayValue');
+            const echoFeedbackSlider = document.getElementById('echoFeedback');
+            const echoFeedbackValueSpan = document.getElementById('echoFeedbackValue');
             const rhythmControlsContainer = document.getElementById('rhythm-controls-container');
 
             // --- Helper Functions ---
@@ -283,9 +301,8 @@
             }
 
             function calculateRadius(index, total) {
-                const maxRadiusReduction = 0.95; // Allow rings to get even closer for 32
+                const maxRadiusReduction = 0.95;
                 const radiusStep = total > 1 ? (baseRadius * maxRadiusReduction) / (total - 1) : 0;
-                // Use a minimum radius to prevent collapse
                 return Math.max(baseRadius * 0.03, baseRadius - (index * radiusStep));
             }
 
@@ -299,9 +316,9 @@
                     rhythmParams[index] = {};
                 }
 
-                // Slightly adjusted defaults for more spread with 32 rhythms
-                const defaultBeats = index < 4 ? (index + 2) : Math.round(2 + index * (14 / MAX_RHYTHMS));
-                const defaultFreq = 200 + index * (1800 / MAX_RHYTHMS); // Wider freq range
+                // *** MODIFIED: Default beats calculation for max 33 ***
+                const defaultBeats = index < 4 ? (index + 2) : Math.round(2 + index * (31 / MAX_RHYTHMS));
+                const defaultFreq = 200 + index * (1800 / MAX_RHYTHMS);
 
                 rhythmParams[index].beats = beatsSlider ? parseInt(beatsSlider.value) : defaultBeats;
                 rhythmParams[index].freq = freqSlider ? parseFloat(freqSlider.value) : defaultFreq;
@@ -313,29 +330,45 @@
                 const beatsValueSpan = document.getElementById(`rhythmValue_${index}`);
                 const freqValueSpan = document.getElementById(`freqValue_${index}`);
                 if (beatsValueSpan) beatsValueSpan.textContent = rhythmParams[index].beats;
-                if (freqValueSpan) freqValueSpan.textContent = rhythmParams[index].freq.toFixed(0); // Display freq as integer
+                if (freqValueSpan) freqValueSpan.textContent = rhythmParams[index].freq.toFixed(0);
 
                 rhythmParams[index].radius = calculateRadius(index, numActiveRhythms);
             }
 
-            // Update all global parameters including waveform settings
+            // Update all global parameters including echo settings
             function updateAllParameters() {
                 tempo = parseFloat(tempoSlider.value);
                 volume = parseFloat(volumeSlider.value);
-                // *** Read waveform settings ***
                 soundType1 = soundType1Select.value;
                 soundType2 = soundType2Select.value;
                 soundType3 = soundType3Select.value;
                 soundType2Enabled = soundType2EnabledCheckbox.checked;
                 soundType3Enabled = soundType3EnabledCheckbox.checked;
+                // *** Read echo settings ***
+                echoEnabled = echoEnabledCheckbox.checked;
+                echoDelayTime = parseFloat(echoDelaySlider.value);
+                echoFeedbackAmount = parseFloat(echoFeedbackSlider.value);
 
                 tempoValueSpan.textContent = tempo.toFixed(1);
                 volumeValueSpan.textContent = volume.toFixed(2);
+                // *** Update echo display ***
+                echoDelayValueSpan.textContent = echoDelayTime.toFixed(2);
+                echoFeedbackValueSpan.textContent = echoFeedbackAmount.toFixed(2);
+
 
                 cycleDuration = 60.0 / tempo;
 
+                // Update master gain
                 if (masterGain && audioContext) {
                     masterGain.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.05);
+                }
+
+                 // *** Update echo node parameters ***
+                if (echoDelayNode && echoFeedbackGainNode && audioContext) {
+                    echoDelayNode.delayTime.linearRampToValueAtTime(echoDelayTime, audioContext.currentTime + 0.05);
+                    // Set feedback gain based on enabled state
+                    const targetFeedbackGain = echoEnabled ? echoFeedbackAmount : 0;
+                    echoFeedbackGainNode.gain.linearRampToValueAtTime(targetFeedbackGain, audioContext.currentTime + 0.05);
                 }
 
                 for (let i = 0; i < numActiveRhythms; i++) {
@@ -350,10 +383,8 @@
                         if (param) param.nextNoteTime = currentTime;
                     });
                     startTime = currentTime;
-                    // No need to log every parameter update
-                    // console.log("Global parameters updated, resetting scheduler timing.");
                 }
-                 handleResize(); // Update viz radii/positions
+                 handleResize();
             }
 
             // Create/remove rhythm controls and update SVG elements
@@ -370,7 +401,6 @@
                     const color = getRhythmColor(i);
                     const controlDiv = document.createElement('div');
                     controlDiv.id = `rhythmControls_${i}`;
-                    // Using slightly darker bg for controls for contrast
                     controlDiv.className = `rhythm-controls w-full flex flex-col sm:flex-row items-center justify-between space-y-1 sm:space-y-0 sm:space-x-3 p-2 border-l-4 ${color.border} bg-gray-900 bg-opacity-40 rounded-md`;
 
                     if (!rhythmParams[i]) {
@@ -378,10 +408,10 @@
                     }
                     const currentParams = rhythmParams[i];
 
-                    // Adjusted max frequency range
+                    // *** MODIFIED: Beats slider max="33" ***
                     controlDiv.innerHTML = `
                         <label for="rhythmBeats_${i}" class="font-medium text-xs whitespace-nowrap ${color.text}">Rhythm ${i + 1} Beats: <span id="rhythmValue_${i}" class="font-bold">${currentParams.beats}</span></label>
-                        <input type="range" id="rhythmBeats_${i}" min="1" max="32" value="${currentParams.beats}" step="1" class="w-full h-2 ${color.slider} bg-opacity-50 rounded-lg appearance-none cursor-pointer">
+                        <input type="range" id="rhythmBeats_${i}" min="2" max="33" value="${currentParams.beats}" step="1" class="w-full h-2 ${color.slider} bg-opacity-50 rounded-lg appearance-none cursor-pointer">
                         <label for="freqSlider_${i}" class="font-medium text-xs whitespace-nowrap ml-0 sm:ml-2 ${color.text}">Freq ${i + 1} (Hz): <span id="freqValue_${i}" class="font-bold">${currentParams.freq.toFixed(0)}</span></label>
                         <input type="range" id="freqSlider_${i}" min="50" max="4000" value="${currentParams.freq}" step="5" class="w-full h-2 ${color.slider} bg-opacity-50 rounded-lg appearance-none cursor-pointer">
                     `;
@@ -404,16 +434,13 @@
                     }
                 }
 
-                // Use index as key function for simplicity when just adding/removing
                 const updatePaths = vizGroup.selectAll(".path-circle.dynamic-viz")
                     .data(rhythmParams, (d, i) => i);
-
                 updatePaths.exit().remove();
-
                 updatePaths.enter()
                     .append("circle")
                     .attr("class", "path-circle dynamic-viz")
-                    .merge(updatePaths) // Apply updates to both entering and existing elements
+                    .merge(updatePaths)
                     .attr("id", (d, i) => `path_${i}`)
                     .style("stroke", d => d.color.hex)
                     .each(function(d) { d.path = d3.select(this); })
@@ -421,35 +448,52 @@
 
                 const updateDots = vizGroup.selectAll(".beat-dot.dynamic-viz")
                     .data(rhythmParams, (d, i) => i);
-
                 updateDots.exit().remove();
-
                 updateDots.enter()
                     .append("circle")
                     .attr("class", "beat-dot dynamic-viz")
                     .attr("filter", "url(#glow)")
-                    .merge(updateDots) // Apply updates to both entering and existing elements
+                    .merge(updateDots)
                     .attr("id", (d, i) => `dot_${i}`)
-                    .attr("r", 8) // Consider dynamic radius later: Math.max(3, 8 - numActiveRhythms * 0.15))
+                    .attr("r", 8)
                     .attr("fill", d => d.color.hex)
                     .each(function(d) { d.dot = d3.select(this); })
                     .attr("cx", d => d.radius)
                     .attr("cy", 0);
 
-                updateAllParameters(); // Recalculate intervals, apply radii, etc.
+                updateAllParameters();
             }
 
 
             // --- Audio Functions ---
+            // *** MODIFIED: initAudioContext to create echo nodes ***
             function initAudioContext() {
-                // ... (no changes)
-                 if (!audioContext) {
+                if (!audioContext) {
                     try {
                         audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+                        // Master Gain
                         masterGain = audioContext.createGain();
                         masterGain.gain.setValueAtTime(volume, audioContext.currentTime);
-                        masterGain.connect(audioContext.destination);
-                        console.log("AudioContext initialized.");
+
+                        // Echo Nodes
+                        echoDelayNode = audioContext.createDelay(1.0); // Max delay 1 second
+                        echoFeedbackGainNode = audioContext.createGain();
+
+                        // Set initial echo values
+                        echoDelayNode.delayTime.setValueAtTime(echoDelayTime, audioContext.currentTime);
+                        echoFeedbackGainNode.gain.setValueAtTime(echoEnabled ? echoFeedbackAmount : 0, audioContext.currentTime);
+
+                        // Connect audio graph
+                        masterGain.connect(audioContext.destination); // Dry signal path
+
+                        // Echo path
+                        masterGain.connect(echoDelayNode);
+                        echoDelayNode.connect(echoFeedbackGainNode);
+                        echoFeedbackGainNode.connect(echoDelayNode); // Feedback loop
+                        echoFeedbackGainNode.connect(audioContext.destination); // Wet signal path
+
+                        console.log("AudioContext initialized with echo nodes.");
                     } catch (e) {
                         console.error("Web Audio API is not supported", e);
                         alert("Web Audio API not supported by your browser.");
@@ -462,45 +506,47 @@
                 return true;
             }
 
-            // *** MODIFIED: playNote to handle multiple waveforms ***
-            function playNote(time, frequency, gainNode) {
+            // *** MODIFIED: playNote to add waveform delays ***
+            function playNote(time, frequency, gainNode) { // gainNode is masterGain here
                 if (!audioContext) return;
 
                 // Function to create one oscillator and its envelope
-                const createOsc = (type, freq, time) => {
+                const createOsc = (type, freq, startTime) => {
                     const osc = audioContext.createOscillator();
                     osc.type = type;
-                    osc.frequency.setValueAtTime(freq, time);
+                    osc.frequency.setValueAtTime(freq, startTime);
                     const env = audioContext.createGain();
-                    env.gain.setValueAtTime(1.0, time); // Start at full volume (relative to masterGain)
-                    env.gain.exponentialRampToValueAtTime(0.001, time + noteDuration);
+                    // Slightly reduce gain of additional waves? Optional.
+                    // const gainLevel = (type === soundType1) ? 1.0 : 0.8;
+                    env.gain.setValueAtTime(1.0, startTime);
+                    env.gain.exponentialRampToValueAtTime(0.001, startTime + noteDuration);
+
+                    // Connect oscillator -> envelope -> master gain
+                    // The master gain then goes to destination AND echo nodes
                     osc.connect(env);
-                    env.connect(gainNode); // Connect envelope to the main gain node for the note
-                    osc.start(time);
-                    osc.stop(time + noteDuration + 0.05);
+                    env.connect(gainNode);
+
+                    osc.start(startTime);
+                    osc.stop(startTime + noteDuration + 0.05); // Stop slightly after decay
                 };
 
-                // Create primary oscillator
+                // Create primary oscillator (no delay)
                 createOsc(soundType1, frequency, time);
 
-                // Create secondary oscillator if enabled
+                // Create secondary oscillator if enabled (with delay)
                 if (soundType2Enabled) {
-                    // Optional: Adjust frequency slightly for layering effect (e.g., octave or fifth)
-                    // let freq2 = frequency * 1.5; // Example: Perfect fifth
-                    createOsc(soundType2, frequency, time);
+                    createOsc(soundType2, frequency, time + WAVEFORM_2_DELAY);
                 }
 
-                // Create tertiary oscillator if enabled
+                // Create tertiary oscillator if enabled (with delay)
                 if (soundType3Enabled) {
-                     // Optional: Adjust frequency
-                    // let freq3 = frequency * 2; // Example: Octave higher
-                    createOsc(soundType3, frequency, time);
+                    createOsc(soundType3, frequency, time + WAVEFORM_3_DELAY);
                 }
             }
 
             // --- Scheduler ---
             function scheduleNotes() {
-                // ... (no changes)
+                 // ... (no changes)
                  if (!isPlaying || !audioContext) return;
                 const currentTime = audioContext.currentTime;
 
@@ -509,7 +555,7 @@
                     if (!param || !param.interval || param.interval === Infinity) continue;
 
                     while (param.nextNoteTime < currentTime + scheduleAheadTime) {
-                        playNote(param.nextNoteTime, param.freq, masterGain);
+                        playNote(param.nextNoteTime, param.freq, masterGain); // Pass masterGain
                         triggerVisualFlash(i, 50);
                         param.nextNoteTime += param.interval;
                     }
@@ -524,10 +570,8 @@
                     animationFrameId = null;
                     return;
                 }
-
                 const elapsed = audioContext.currentTime - startTime;
                 const cyclePhase = cycleDuration > 0 ? (elapsed % cycleDuration) / cycleDuration : 0;
-
                 for (let i = 0; i < numActiveRhythms; i++) {
                     const param = rhythmParams[i];
                     if (param && param.dot && param.beats > 0) {
@@ -540,15 +584,11 @@
 
             function triggerVisualFlash(index, durationMs = 100) {
                  // ... (no changes)
-                  const param = rhythmParams[index];
+                 const param = rhythmParams[index];
                  if (param && param.dot) {
                     param.dot.classed("playing", true)
-                       .transition()
-                       .duration(durationMs * 0.4)
-                       .attr("r", 10) // Slightly larger flash for visibility with many dots
-                       .transition()
-                       .duration(durationMs * 0.6)
-                       .attr("r", 8) // Back to normal (or dynamic size)
+                       .transition().duration(durationMs * 0.4).attr("r", 10)
+                       .transition().duration(durationMs * 0.6).attr("r", 8)
                        .on("end", () => param.dot.classed("playing", false));
                  }
             }
@@ -558,25 +598,20 @@
                 // ... (no changes)
                  if (isPlaying) return;
                 if (!initAudioContext()) return;
-
                 isPlaying = true;
                 startStopButton.textContent = 'Stop';
                 startStopButton.classList.remove('bg-green-600', 'hover:bg-green-700', 'focus:ring-green-500');
                 startStopButton.classList.add('bg-red-600', 'hover:bg-red-700', 'focus:ring-red-500');
-
                 const currentTime = audioContext.currentTime;
                 startTime = currentTime;
                 rhythmParams.slice(0, numActiveRhythms).forEach(param => {
                     if (param) param.nextNoteTime = currentTime;
                 });
-
                 if (schedulerIntervalId) clearInterval(schedulerIntervalId);
                 scheduleNotes();
                 schedulerIntervalId = setInterval(scheduleNotes, schedulerFrequency);
-
                 if (animationFrameId) cancelAnimationFrame(animationFrameId);
                 animationFrameId = requestAnimationFrame(animateVisuals);
-
                 console.log("Playback started.");
             }
 
@@ -587,14 +622,11 @@
                 startStopButton.textContent = 'Start';
                 startStopButton.classList.remove('bg-red-600', 'hover:bg-red-700', 'focus:ring-red-500');
                 startStopButton.classList.add('bg-green-600', 'hover:bg-green-700', 'focus:ring-green-500');
-
                 if (schedulerIntervalId) clearInterval(schedulerIntervalId);
                 schedulerIntervalId = null;
-
                 if (animationFrameId) cancelAnimationFrame(animationFrameId);
                 animateVisuals();
                 animationFrameId = null;
-
                 console.log("Playback stopped.");
             }
 
@@ -605,9 +637,7 @@
                 height = svgElement.clientHeight;
                 baseRadius = Math.min(width, height) / 2 * 0.9;
                 center = { x: width / 2, y: height / 2 };
-
                 vizGroup.attr("transform", `translate(${center.x}, ${center.y})`);
-
                 for (let i = 0; i < numActiveRhythms; i++) {
                     const param = rhythmParams[i];
                     if (param) {
@@ -616,7 +646,6 @@
                          if (param.dot) param.dot.attr("cx", param.radius);
                     }
                 }
-
                 if (isPlaying && animationFrameId) {
                      animateVisuals();
                 } else {
@@ -629,12 +658,15 @@
             tempoSlider.addEventListener('input', updateAllParameters);
             volumeSlider.addEventListener('input', updateAllParameters);
             numRhythmsSlider.addEventListener('input', updateRhythmControlsAndVisuals);
-            // *** ADDED: Listeners for waveform controls ***
             soundType1Select.addEventListener('change', updateAllParameters);
             soundType2Select.addEventListener('change', updateAllParameters);
             soundType3Select.addEventListener('change', updateAllParameters);
             soundType2EnabledCheckbox.addEventListener('change', updateAllParameters);
             soundType3EnabledCheckbox.addEventListener('change', updateAllParameters);
+            // *** ADDED: Listeners for echo controls ***
+            echoEnabledCheckbox.addEventListener('change', updateAllParameters);
+            echoDelaySlider.addEventListener('input', updateAllParameters);
+            echoFeedbackSlider.addEventListener('input', updateAllParameters);
 
             let resizeTimeout;
             window.addEventListener('resize', () => {
@@ -646,9 +678,10 @@
             // Set initial checkbox states from JS variables
             soundType2EnabledCheckbox.checked = soundType2Enabled;
             soundType3EnabledCheckbox.checked = soundType3Enabled;
-            // Setup initial controls/visuals based on default slider value (2)
+            echoEnabledCheckbox.checked = echoEnabled; // Set initial echo checkbox state
+            // Setup initial controls/visuals
             updateRhythmControlsAndVisuals();
-            // Ensure all initial parameters (including waveforms) are read
+            // Ensure all initial parameters are read and applied
             updateAllParameters();
 
 
