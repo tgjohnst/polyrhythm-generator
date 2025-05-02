@@ -26,7 +26,7 @@
             width: 90%;
             max-width: 800px;
             aspect-ratio: 1 / 1;
-            margin: 1rem auto;
+            margin: 1rem auto; /* Keep margin for spacing */
         }
         #viz-svg {
             width: 100%;
@@ -93,6 +93,15 @@
             position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
             overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;
         }
+        /* Github icon style */
+        .github-icon {
+            display: inline-block;
+            width: 1.2em;
+            height: 1.2em;
+            vertical-align: middle;
+            margin-left: 0.25em;
+            fill: currentColor; /* Use text color */
+        }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -102,7 +111,12 @@
 
     <h1 class="text-3xl font-bold text-gray-100 mb-6">Polyrhythm Generator</h1>
 
-    <div id="controls" class="mb-6 p-6 bg-gray-800 rounded-lg shadow-md w-full max-w-4xl flex flex-col items-center space-y-4">
+    <div id="visualization">
+        <svg id="viz-svg" class="bg-gray-900 rounded-full">
+             </svg>
+    </div>
+
+    <div id="controls" class="mt-6 p-6 bg-gray-800 rounded-lg shadow-md w-full max-w-4xl flex flex-col items-center space-y-4">
         <button id="startStopButton" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
             Start
         </button>
@@ -111,7 +125,7 @@
             <div class="flex flex-col space-y-4">
                 <div class="p-3 border border-gray-700 rounded-md flex flex-col space-y-2">
                     <label for="tempo" class="font-medium text-sm whitespace-nowrap text-gray-200">Tempo (BPM): <span id="tempoValue" class="font-bold text-indigo-400">3.00</span></label>
-                    <input type="range" id="tempo" min="1" max="40" value="3.0" step="0.05" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+                    <input type="range" id="tempo" min="0.10" max="40" value="3.0" step="0.05" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
                 </div>
                 <div class="p-3 border border-gray-700 rounded-md flex flex-col space-y-2">
                     <label for="volume" class="font-medium text-sm whitespace-nowrap text-gray-200">Volume: <span id="volumeValue" class="font-bold text-indigo-400">0.50</span></label>
@@ -164,8 +178,8 @@
 
             <div class="flex flex-col space-y-4">
                 <div class="p-3 border border-gray-700 rounded-md flex flex-col space-y-2">
-                    <label for="numRhythms" class="font-medium text-sm whitespace-nowrap text-gray-200">Number of Rhythms: <span id="numRhythmsValue" class="font-bold text-indigo-400">2</span></label>
-                    <input type="range" id="numRhythms" min="1" max="32" value="2" step="1" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+                    <label for="numRhythms" class="font-medium text-sm whitespace-nowrap text-gray-200">Number of Rhythms: <span id="numRhythmsValue" class="font-bold text-indigo-400">16</span></label>
+                    <input type="range" id="numRhythms" min="1" max="32" value="16" step="1" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
                 </div>
                 <div class="p-3 border border-gray-700 rounded-md flex flex-col space-y-3">
                     <span class="font-medium text-sm text-gray-200">Sound Waveforms:</span>
@@ -245,10 +259,18 @@
             </div>
     </div>
 
-    <div id="visualization">
-        <svg id="viz-svg" class="bg-gray-900 rounded-full">
-             </svg>
-    </div>
+    <footer class="mt-8 text-center text-xs text-gray-500">
+        <p>
+            Author: Timothy Johnstone
+            <a href="https://github.com/tgjohnst" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-gray-200 transition-colors">
+                <svg class="github-icon" viewBox="0 0 16 16" version="1.1" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+        </p>
+        <p id="copyright-notice" class="mt-1">&copy; 2024 Polyrhythm Generator</p>
+    </footer>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -261,6 +283,7 @@
             const WAVEFORM_3_DELAY = 0.016;
             const NORMAL_DOT_RADIUS = 8;
             const FLASH_DOT_RADIUS = 12;
+            const ADJUSTMENT_MUTE_DURATION = 200; // ms
 
             // --- Color Theme Generation ---
             function generateHslColors(count, saturation = 70, lightness = 60) { /* ... (no changes) ... */ const colors = []; for (let i = 0; i < count; i++) { const hue = Math.round((i * (360 / count))) % 360; const hex = `hsl(${hue}, ${saturation}%, ${lightness}%)`; const baseHue = Math.round(hue / 30) * 30; let colorName = 'gray'; if (baseHue === 0 || baseHue === 360) colorName = 'red'; else if (baseHue === 30) colorName = 'orange'; else if (baseHue === 60) colorName = 'yellow'; else if (baseHue === 90 || baseHue === 120) colorName = 'lime'; else if (baseHue === 150) colorName = 'emerald'; else if (baseHue === 180) colorName = 'cyan'; else if (baseHue === 210) colorName = 'sky'; else if (baseHue === 240) colorName = 'indigo'; else if (baseHue === 270) colorName = 'purple'; else if (baseHue === 300) colorName = 'fuchsia'; else if (baseHue === 330) colorName = 'pink'; colors.push({ name: `hsl-${i}`, hex: hex, bg: `bg-${colorName}-900`, border: `border-${colorName}-500`, text: `text-${colorName}-400`, slider: `bg-${colorName}-700` }); } return colors; }
@@ -270,37 +293,9 @@
             function generatePastelColors(count) { return generateHslColors(count, 60, 80); }
             function generateForestColors(count) { /* ... (no changes) ... */ const colors = []; const greenHue = 130; const brownHue = 30; for (let i = 0; i < count; i++) { let hex; if (i % 3 === 0) { const light = Math.round(30 + (Math.random() * 30)); const sat = Math.round(40 + (Math.random() * 30)); hex = `hsl(${greenHue + Math.round(Math.random()*20 - 10)}, ${sat}%, ${light}%)`; } else if (i % 3 === 1) { const light = Math.round(25 + (Math.random() * 25)); const sat = Math.round(30 + (Math.random() * 30)); hex = `hsl(${brownHue + Math.round(Math.random()*10 - 5)}, ${sat}%, ${light}%)`; } else { const light = Math.round(40 + (Math.random() * 30)); hex = `hsl(0, 0%, ${light}%)`; } colors.push({ name: `forest-${i}`, hex: hex, border: 'border-green-700', text: 'text-green-300', slider: 'bg-green-800' }); } return colors; }
             function generateOceanColors(count) { /* ... (no changes) ... */ const colors = []; const baseHues = [180, 200, 220]; for (let i = 0; i < count; i++) { const baseHue = baseHues[i % baseHues.length]; const sat = Math.round(50 + (Math.random() * 40)); const light = Math.round(40 + (Math.random() * 35)); const hex = `hsl(${baseHue + Math.round(Math.random()*15 - 7)}, ${sat}%, ${light}%)`; colors.push({ name: `ocean-${i}`, hex: hex, border: 'border-blue-500', text: 'text-blue-300', slider: 'bg-blue-700' }); } return colors; }
-            // *** ADDED: New Theme Generators ***
-            function generateDesertColors(count) {
-                const colors = []; const baseHues = [25, 40, 55]; // Oranges, Yellows, Sand
-                for (let i = 0; i < count; i++) {
-                    const baseHue = baseHues[i % baseHues.length];
-                    const sat = Math.round(50 + (Math.random() * 40)); // 50-90%
-                    const light = Math.round(55 + (Math.random() * 25)); // 55-80% (lighter)
-                    const hex = `hsl(${baseHue + Math.round(Math.random()*10 - 5)}, ${sat}%, ${light}%)`;
-                    colors.push({ name: `desert-${i}`, hex: hex, border: 'border-yellow-600', text: 'text-yellow-300', slider: 'bg-yellow-800' });
-                } return colors;
-            }
-            function generateVolcanoColors(count) {
-                const colors = []; const baseHues = [0, 15, 30]; // Reds, Dark Oranges
-                for (let i = 0; i < count; i++) {
-                    const baseHue = baseHues[i % baseHues.length];
-                    const sat = Math.round(70 + (Math.random() * 30)); // 70-100%
-                    const light = Math.round(40 + (Math.random() * 25)); // 40-65% (mid to dark)
-                    const hex = `hsl(${baseHue + Math.round(Math.random()*5 - 2)}, ${sat}%, ${light}%)`;
-                    colors.push({ name: `volcano-${i}`, hex: hex, border: 'border-red-500', text: 'text-red-300', slider: 'bg-red-800' });
-                } return colors;
-            }
-             function generateSynthwaveColors(count) {
-                 const colors = []; const baseHues = [270, 300, 330, 180]; // Purples, Pinks, Cyan
-                 for (let i = 0; i < count; i++) {
-                     const baseHue = baseHues[i % baseHues.length];
-                     const sat = 100; // Max saturation
-                     const light = Math.round(55 + (Math.random() * 15)); // 55-70% (bright)
-                     const hex = `hsl(${baseHue + Math.round(Math.random()*10 - 5)}, ${sat}%, ${light}%)`;
-                     colors.push({ name: `synth-${i}`, hex: hex, border: 'border-pink-500', text: 'text-pink-300', slider: 'bg-purple-800' });
-                 } return colors;
-             }
+            function generateDesertColors(count) { /* ... (no changes) ... */ const colors = []; const baseHues = [25, 40, 55]; for (let i = 0; i < count; i++) { const baseHue = baseHues[i % baseHues.length]; const sat = Math.round(50 + (Math.random() * 40)); const light = Math.round(55 + (Math.random() * 25)); const hex = `hsl(${baseHue + Math.round(Math.random()*10 - 5)}, ${sat}%, ${light}%)`; colors.push({ name: `desert-${i}`, hex: hex, border: 'border-yellow-600', text: 'text-yellow-300', slider: 'bg-yellow-800' }); } return colors; }
+            function generateVolcanoColors(count) { /* ... (no changes) ... */ const colors = []; const baseHues = [0, 15, 30]; for (let i = 0; i < count; i++) { const baseHue = baseHues[i % baseHues.length]; const sat = Math.round(70 + (Math.random() * 30)); const light = Math.round(40 + (Math.random() * 25)); const hex = `hsl(${baseHue + Math.round(Math.random()*5 - 2)}, ${sat}%, ${light}%)`; colors.push({ name: `volcano-${i}`, hex: hex, border: 'border-red-500', text: 'text-red-300', slider: 'bg-red-800' }); } return colors; }
+            function generateSynthwaveColors(count) { /* ... (no changes) ... */ const colors = []; const baseHues = [270, 300, 330, 180]; for (let i = 0; i < count; i++) { const baseHue = baseHues[i % baseHues.length]; const sat = 100; const light = Math.round(55 + (Math.random() * 15)); const hex = `hsl(${baseHue + Math.round(Math.random()*10 - 5)}, ${sat}%, ${light}%)`; colors.push({ name: `synth-${i}`, hex: hex, border: 'border-pink-500', text: 'text-pink-300', slider: 'bg-purple-800' }); } return colors; }
 
             const THEMES = {
                 rainbow: generateHslColors(MAX_RHYTHMS), grayscale: generateGrayscaleColors(MAX_RHYTHMS),
@@ -308,7 +303,6 @@
                 warm: generateMonochromaticColors(MAX_RHYTHMS, 30, 60, 90, 50, 70), cool: generateMonochromaticColors(MAX_RHYTHMS, 200, 40, 80, 45, 70),
                 neon: generateNeonColors(MAX_RHYTHMS), pastel: generatePastelColors(MAX_RHYTHMS),
                 forest: generateForestColors(MAX_RHYTHMS), ocean: generateOceanColors(MAX_RHYTHMS),
-                // *** ADDED: New Themes ***
                 desert: generateDesertColors(MAX_RHYTHMS), volcano: generateVolcanoColors(MAX_RHYTHMS),
                 synthwave: generateSynthwaveColors(MAX_RHYTHMS),
             };
@@ -316,23 +310,20 @@
 
 
             // --- Audio Setup ---
-            let audioContext; let masterGain; let echoDelayNode; let echoFeedbackGainNode;
-            // *** ADDED: Filter node ***
-            let filterNode;
+            let audioContext; let masterGain; let echoDelayNode; let echoFeedbackGainNode; let filterNode;
             let echoEnabled = false; let echoDelayTime = 0.3; let echoFeedbackAmount = 0.4;
-            // *** ADDED: Filter parameters ***
-            let filterEnabled = false;
-            let filterFrequency = 20000;
-            let filterQ = 1.0;
-
+            let filterEnabled = false; let filterFrequency = 20000; let filterQ = 1.0;
             let isPlaying = false; let schedulerIntervalId = null; let animationFrameId = null; let startTime = 0;
+            let adjustmentMuteTimeoutId = null;
+
 
             // --- Parameters ---
-            let tempo = 3.0; let volume = 0.5; let numActiveRhythms = 2;
+            let tempo = 3.0; let volume = 0.5;
+            // *** MODIFIED: Default numActiveRhythms ***
+            let numActiveRhythms = 16;
             let soundType1 = 'sine'; let soundType2 = 'square'; let soundType3 = 'sawtooth';
             let soundType2Enabled = false; let soundType3Enabled = false;
-            // *** ADDED: Sustain parameter ***
-            let noteSustainTime = 0.05; // Default sustain
+            let noteSustainTime = 0.05;
             let cycleDuration = 60.0 / tempo; let rhythmParams = [];
             let trailsEnabled = true; let trailOpacity = 0.3; let trailWidth = 1.0; let trailDashArray = "3 2";
 
@@ -365,14 +356,12 @@
             const trailOpacitySlider = document.getElementById('trailOpacity'); const trailOpacityValueSpan = document.getElementById('trailOpacityValue');
             const trailWidthSlider = document.getElementById('trailWidth'); const trailWidthValueSpan = document.getElementById('trailWidthValue');
             const trailDashSelect = document.getElementById('trailDash');
-            // *** ADDED: Sustain and Filter references ***
-            const noteSustainSlider = document.getElementById('noteSustain');
-            const noteSustainValueSpan = document.getElementById('noteSustainValue');
+            const noteSustainSlider = document.getElementById('noteSustain'); const noteSustainValueSpan = document.getElementById('noteSustainValue');
             const filterEnabledCheckbox = document.getElementById('filterEnabled');
-            const filterFreqSlider = document.getElementById('filterFreq');
-            const filterFreqValueSpan = document.getElementById('filterFreqValue');
-            const filterQSlider = document.getElementById('filterQ');
-            const filterQValueSpan = document.getElementById('filterQValue');
+            const filterFreqSlider = document.getElementById('filterFreq'); const filterFreqValueSpan = document.getElementById('filterFreqValue');
+            const filterQSlider = document.getElementById('filterQ'); const filterQValueSpan = document.getElementById('filterQValue');
+            // *** ADDED: Copyright Notice reference ***
+            const copyrightNotice = document.getElementById('copyright-notice');
 
 
             // --- Helper Functions ---
@@ -387,6 +376,9 @@
 
 
             function updateAllParameters() {
+                clearTimeout(adjustmentMuteTimeoutId);
+                adjustmentMuteTimeoutId = setTimeout(() => { adjustmentMuteTimeoutId = null; }, ADJUSTMENT_MUTE_DURATION);
+
                 tempo = parseFloat(tempoSlider.value);
                 volume = parseFloat(volumeSlider.value);
                 soundType1 = soundType1Select.value;
@@ -401,7 +393,6 @@
                 trailOpacity = parseFloat(trailOpacitySlider.value);
                 trailWidth = parseFloat(trailWidthSlider.value);
                 trailDashArray = trailDashSelect.value;
-                // *** Read Sustain and Filter settings ***
                 noteSustainTime = parseFloat(noteSustainSlider.value);
                 filterEnabled = filterEnabledCheckbox.checked;
                 filterFrequency = parseFloat(filterFreqSlider.value);
@@ -413,30 +404,28 @@
                 echoFeedbackValueSpan.textContent = echoFeedbackAmount.toFixed(2);
                 trailOpacityValueSpan.textContent = trailOpacity.toFixed(2);
                 trailWidthValueSpan.textContent = trailWidth.toFixed(1);
-                // *** Update Sustain and Filter display ***
                 noteSustainValueSpan.textContent = noteSustainTime.toFixed(2);
                 filterFreqValueSpan.textContent = filterFrequency.toFixed(0);
                 filterQValueSpan.textContent = filterQ.toFixed(2);
-
 
                 cycleDuration = 60.0 / tempo;
 
                 if (masterGain && audioContext) { masterGain.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.05); }
                 if (echoDelayNode && echoFeedbackGainNode && audioContext) { echoDelayNode.delayTime.linearRampToValueAtTime(echoDelayTime, audioContext.currentTime + 0.05); const targetFeedbackGain = echoEnabled ? echoFeedbackAmount : 0; echoFeedbackGainNode.gain.linearRampToValueAtTime(targetFeedbackGain, audioContext.currentTime + 0.05); }
-                // *** Update Filter node parameters ***
                  if (filterNode && audioContext) {
-                    // If filter disabled, set freq high; otherwise, set to slider value
                     const targetFreq = filterEnabled ? filterFrequency : audioContext.sampleRate / 2;
-                    filterNode.frequency.linearRampToValueAtTime(targetFreq, audioContext.currentTime + 0.05);
-                    filterNode.Q.linearRampToValueAtTime(filterQ, audioContext.currentTime + 0.05);
+                    filterNode.frequency.setTargetAtTime(targetFreq, audioContext.currentTime, 0.015);
+                    filterNode.Q.setTargetAtTime(filterQ, audioContext.currentTime, 0.015);
                 }
-
 
                 for (let i = 0; i < numActiveRhythms; i++) { /* ... (no changes) ... */ if (rhythmParams[i]) { cycleDuration = 60.0 / tempo; rhythmParams[i].interval = rhythmParams[i].beats > 0 ? cycleDuration / rhythmParams[i].beats : Infinity; const freqSlider = document.getElementById(`freqSlider_${i}`); const beatsSlider = document.getElementById(`rhythmBeats_${i}`); if(freqSlider) rhythmParams[i].freq = parseFloat(freqSlider.value); if(beatsSlider) rhythmParams[i].beats = parseInt(beatsSlider.value); } }
                  updateRhythmStyles(); // Apply theme colors and trail styles
 
-
-                if (isPlaying && audioContext) { /* ... (no changes) ... */ const currentTime = audioContext.currentTime; rhythmParams.slice(0, numActiveRhythms).forEach(param => { if (param) param.nextNoteTime = currentTime; }); startTime = currentTime; }
+                if (isPlaying && audioContext) {
+                    const currentTime = audioContext.currentTime;
+                    rhythmParams.slice(0, numActiveRhythms).forEach(param => { if (param) param.nextNoteTime = currentTime; });
+                    startTime = currentTime;
+                }
                  handleResize();
             }
 
@@ -501,78 +490,60 @@
 
 
             // --- Audio Functions ---
-            // *** MODIFIED: initAudioContext to create filter node and connect graph ***
-            function initAudioContext() {
-                 if (!audioContext) {
-                    try {
-                        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                        masterGain = audioContext.createGain();
-                        masterGain.gain.setValueAtTime(volume, audioContext.currentTime);
-
-                        // Create Filter Node
-                        filterNode = audioContext.createBiquadFilter();
-                        filterNode.type = 'lowpass';
-                        filterNode.frequency.setValueAtTime(filterEnabled ? filterFrequency : audioContext.sampleRate / 2, audioContext.currentTime);
-                        filterNode.Q.setValueAtTime(filterQ, audioContext.currentTime);
-
-                        // Create Echo Nodes
-                        echoDelayNode = audioContext.createDelay(1.0);
-                        echoFeedbackGainNode = audioContext.createGain();
-                        echoDelayNode.delayTime.setValueAtTime(echoDelayTime, audioContext.currentTime);
-                        echoFeedbackGainNode.gain.setValueAtTime(echoEnabled ? echoFeedbackAmount : 0, audioContext.currentTime);
-
-                        // Connect Audio Graph: Master -> Filter -> (Destination AND Echo Input)
-                        masterGain.connect(filterNode);
-                        filterNode.connect(audioContext.destination); // Filtered Dry Signal
-                        filterNode.connect(echoDelayNode); // Filtered Wet Signal Input
-
-                        // Echo Loop: Delay -> Feedback -> Delay
-                        echoDelayNode.connect(echoFeedbackGainNode);
-                        echoFeedbackGainNode.connect(echoDelayNode);
-                        // Echo Output: Feedback -> Destination
-                        echoFeedbackGainNode.connect(audioContext.destination);
-
-                        console.log("AudioContext initialized with Filter and Echo nodes.");
-                    } catch (e) { console.error("Web Audio API is not supported", e); alert("Web Audio API not supported by your browser."); return false; }
-                }
-                if (audioContext.state === 'suspended') {
-                    audioContext.resume().then(() => console.log("AudioContext resumed."));
-                }
-                return true;
-            }
-
-            // *** MODIFIED: playNote to use noteSustainTime ***
-            function playNote(time, frequency, gainNode) {
-                if (!audioContext) return;
-                const createOsc = (type, freq, startTime) => {
-                    const osc = audioContext.createOscillator();
-                    osc.type = type;
-                    osc.frequency.setValueAtTime(freq, startTime);
-                    const env = audioContext.createGain();
-                    env.gain.setValueAtTime(1.0, startTime);
-                    // Use noteSustainTime for decay
-                    env.gain.exponentialRampToValueAtTime(0.001, startTime + noteSustainTime);
-                    osc.connect(env);
-                    env.connect(gainNode); // Connect to masterGain (before filter/echo)
-                    osc.start(startTime);
-                    // Stop oscillator slightly after sustain ends
-                    osc.stop(startTime + noteSustainTime + 0.05);
-                };
-                createOsc(soundType1, frequency, time);
-                if (soundType2Enabled) { createOsc(soundType2, frequency, time + WAVEFORM_2_DELAY); }
-                if (soundType3Enabled) { createOsc(soundType3, frequency, time + WAVEFORM_3_DELAY); }
-            }
+            function initAudioContext() { /* ... (no changes) ... */ if (!audioContext) { try { audioContext = new (window.AudioContext || window.webkitAudioContext)(); masterGain = audioContext.createGain(); masterGain.gain.setValueAtTime(volume, audioContext.currentTime); filterNode = audioContext.createBiquadFilter(); filterNode.type = 'lowpass'; filterNode.frequency.setValueAtTime(filterEnabled ? filterFrequency : audioContext.sampleRate / 2, audioContext.currentTime); filterNode.Q.setValueAtTime(filterQ, audioContext.currentTime); echoDelayNode = audioContext.createDelay(1.0); echoFeedbackGainNode = audioContext.createGain(); echoDelayNode.delayTime.setValueAtTime(echoDelayTime, audioContext.currentTime); echoFeedbackGainNode.gain.setValueAtTime(echoEnabled ? echoFeedbackAmount : 0, audioContext.currentTime); masterGain.connect(filterNode); filterNode.connect(audioContext.destination); filterNode.connect(echoDelayNode); echoDelayNode.connect(echoFeedbackGainNode); echoFeedbackGainNode.connect(echoDelayNode); echoFeedbackGainNode.connect(audioContext.destination); console.log("AudioContext initialized with Filter and Echo nodes."); } catch (e) { console.error("Web Audio API is not supported", e); alert("Web Audio API not supported by your browser."); return false; } } if (audioContext.state === 'suspended') { audioContext.resume().then(() => console.log("AudioContext resumed.")); } return true; }
+            function playNote(time, frequency, gainNode) { /* ... (no changes) ... */ if (!audioContext) return; const createOsc = (type, freq, startTime) => { const osc = audioContext.createOscillator(); osc.type = type; osc.frequency.setValueAtTime(freq, startTime); const env = audioContext.createGain(); env.gain.setValueAtTime(1.0, startTime); env.gain.exponentialRampToValueAtTime(0.001, startTime + noteSustainTime); osc.connect(env); env.connect(gainNode); osc.start(startTime); osc.stop(startTime + noteSustainTime + 0.05); }; createOsc(soundType1, frequency, time); if (soundType2Enabled) { createOsc(soundType2, frequency, time + WAVEFORM_2_DELAY); } if (soundType3Enabled) { createOsc(soundType3, frequency, time + WAVEFORM_3_DELAY); } }
 
             // --- Scheduler ---
-            function scheduleNotes() { /* ... (no changes) ... */ if (!isPlaying || !audioContext) return; const currentTime = audioContext.currentTime; for (let i = 0; i < numActiveRhythms; i++) { const param = rhythmParams[i]; if (!param || !param.interval || param.interval === Infinity) continue; while (param.nextNoteTime < currentTime + scheduleAheadTime) { playNote(param.nextNoteTime, param.freq, masterGain); triggerVisualFlash(i, 100); param.nextNoteTime += param.interval; } } }
+            function scheduleNotes() {
+                // *** ADDED: Check for mute period ***
+                if (adjustmentMuteTimeoutId) return; // Don't schedule notes during mute period
+
+                if (!isPlaying || !audioContext) return;
+                const currentTime = audioContext.currentTime;
+                for (let i = 0; i < numActiveRhythms; i++) {
+                    const param = rhythmParams[i];
+                    if (!param || !param.interval || param.interval === Infinity) continue;
+                    while (param.nextNoteTime < currentTime + scheduleAheadTime) {
+                        playNote(param.nextNoteTime, param.freq, masterGain);
+                        triggerVisualFlash(i, 100);
+                        param.nextNoteTime += param.interval;
+                    }
+                }
+            }
 
             // --- Visualisation Update ---
             function animateVisuals() { /* ... (no changes) ... */ if (!isPlaying || !audioContext) { vizGroup.selectAll(".beat-dot.dynamic-viz").attr("transform", "rotate(0)"); animationFrameId = null; return; } const elapsed = audioContext.currentTime - startTime; const cyclePhase = cycleDuration > 0 ? (elapsed % cycleDuration) / cycleDuration : 0; for (let i = 0; i < numActiveRhythms; i++) { const param = rhythmParams[i]; if (param && param.dot && param.beats > 0) { const angle = cyclePhase * 360 * param.beats; param.dot.attr("transform", `rotate(${angle})`); } } animationFrameId = requestAnimationFrame(animateVisuals); }
             function triggerVisualFlash(index, durationMs = 100) { /* ... (no changes) ... */ const param = rhythmParams[index]; if (param && param.dot) { param.dot.interrupt(); param.dot.classed("playing", true) .transition("flash-out").duration(durationMs * 0.4).ease(d3.easeQuadOut) .attr("r", FLASH_DOT_RADIUS).style("opacity", 1.0) .transition("flash-in").duration(durationMs * 0.6).ease(d3.easeQuadIn) .attr("r", NORMAL_DOT_RADIUS).style("opacity", null) .on("end", function() { d3.select(this).classed("playing", false); }); } }
 
             // --- Control Logic ---
-            function start() { /* ... (no changes) ... */ if (isPlaying) return; if (!initAudioContext()) return; isPlaying = true; startStopButton.textContent = 'Stop'; startStopButton.classList.remove('bg-green-600', 'hover:bg-green-700', 'focus:ring-green-500'); startStopButton.classList.add('bg-red-600', 'hover:bg-red-700', 'focus:ring-red-500'); const currentTime = audioContext.currentTime; startTime = currentTime; rhythmParams.slice(0, numActiveRhythms).forEach(param => { if (param) param.nextNoteTime = currentTime; }); if (schedulerIntervalId) clearInterval(schedulerIntervalId); scheduleNotes(); schedulerIntervalId = setInterval(scheduleNotes, schedulerFrequency); if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = requestAnimationFrame(animateVisuals); console.log("Playback started."); }
-            function stop() { /* ... (no changes) ... */ if (!isPlaying) return; isPlaying = false; startStopButton.textContent = 'Start'; startStopButton.classList.remove('bg-red-600', 'hover:bg-red-700', 'focus:ring-red-500'); startStopButton.classList.add('bg-green-600', 'hover:bg-green-700', 'focus:ring-green-500'); if (schedulerIntervalId) clearInterval(schedulerIntervalId); schedulerIntervalId = null; if (animationFrameId) cancelAnimationFrame(animationFrameId); animateVisuals(); vizGroup.selectAll(".beat-dot.dynamic-viz").interrupt().attr("r", NORMAL_DOT_RADIUS).style("opacity", null).classed("playing", false); animationFrameId = null; console.log("Playback stopped."); }
+            function start() {
+                if (isPlaying) return; if (!initAudioContext()) return;
+                clearTimeout(adjustmentMuteTimeoutId); adjustmentMuteTimeoutId = null; // Clear mute on explicit start
+
+                isPlaying = true; startStopButton.textContent = 'Stop';
+                startStopButton.classList.remove('bg-green-600', 'hover:bg-green-700', 'focus:ring-green-500');
+                startStopButton.classList.add('bg-red-600', 'hover:bg-red-700', 'focus:ring-red-500');
+                const currentTime = audioContext.currentTime; startTime = currentTime;
+                rhythmParams.slice(0, numActiveRhythms).forEach(param => { if (param) param.nextNoteTime = currentTime; });
+                if (schedulerIntervalId) clearInterval(schedulerIntervalId);
+                scheduleNotes(); schedulerIntervalId = setInterval(scheduleNotes, schedulerFrequency);
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                animationFrameId = requestAnimationFrame(animateVisuals);
+                console.log("Playback started.");
+            }
+            function stop() {
+                if (!isPlaying) return;
+                clearTimeout(adjustmentMuteTimeoutId); adjustmentMuteTimeoutId = null; // Clear mute on explicit stop
+
+                isPlaying = false; startStopButton.textContent = 'Start';
+                startStopButton.classList.remove('bg-red-600', 'hover:bg-red-700', 'focus:ring-red-500');
+                startStopButton.classList.add('bg-green-600', 'hover:bg-green-700', 'focus:ring-green-500');
+                if (schedulerIntervalId) clearInterval(schedulerIntervalId); schedulerIntervalId = null;
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                animateVisuals(); // Reset visuals
+                vizGroup.selectAll(".beat-dot.dynamic-viz").interrupt().attr("r", NORMAL_DOT_RADIUS).style("opacity", null).classed("playing", false);
+                animationFrameId = null; console.log("Playback stopped.");
+            }
 
             // --- Resize Handling ---
             function handleResize() { /* ... (no changes) ... */ width = svgElement.clientWidth; height = svgElement.clientHeight; baseRadius = Math.min(width, height) / 2 * 0.9; center = { x: width / 2, y: height / 2 }; vizGroup.attr("transform", `translate(${center.x}, ${center.y})`); noteIndicatorLine.attr("x1", 0).attr("y1", 0).attr("x2", baseRadius * 1.02).attr("y2", 0); for (let i = 0; i < numActiveRhythms; i++) { const param = rhythmParams[i]; if (param) { param.radius = calculateRadius(i, numActiveRhythms); if (param.path) param.path.attr("r", param.radius); if (param.dot) param.dot.attr("cx", param.radius); } } if (isPlaying && animationFrameId) { animateVisuals(); } else { vizGroup.selectAll(".beat-dot.dynamic-viz").attr("transform", "rotate(0)"); } }
@@ -602,23 +573,24 @@
             trailOpacitySlider.addEventListener('input', updateAllParameters);
             trailWidthSlider.addEventListener('input', updateAllParameters);
             trailDashSelect.addEventListener('change', updateAllParameters);
-            // *** ADDED: Listeners for Sustain and Filter controls ***
             noteSustainSlider.addEventListener('input', updateAllParameters);
             filterEnabledCheckbox.addEventListener('change', updateAllParameters);
             filterFreqSlider.addEventListener('input', updateAllParameters);
             filterQSlider.addEventListener('input', updateAllParameters);
 
-
             let resizeTimeout;
             window.addEventListener('resize', () => { clearTimeout(resizeTimeout); resizeTimeout = setTimeout(handleResize, 100); });
 
             // --- Initial Setup ---
+            // *** ADDED: Set current year in copyright ***
+            copyrightNotice.textContent = `© ${new Date().getFullYear()} Polyrhythm Generator`;
+
             soundType2EnabledCheckbox.checked = soundType2Enabled;
             soundType3EnabledCheckbox.checked = soundType3Enabled;
             echoEnabledCheckbox.checked = echoEnabled;
             trailsEnabledCheckbox.checked = trailsEnabled;
-            filterEnabledCheckbox.checked = filterEnabled; // Set initial filter checkbox state
-            updateRhythmControlsAndVisuals();
+            filterEnabledCheckbox.checked = filterEnabled;
+            updateRhythmControlsAndVisuals(); // Creates controls with correct defaults & initial theme colors
             updateAllParameters(); // Reads all initial values and applies them
 
 
