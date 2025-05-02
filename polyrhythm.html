@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Polyrhythm Generator (Multi)</title>
+    <title>Polyrhythm Generator (Themes)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
@@ -11,13 +11,11 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-        /* Base transition for radius changes on the dot */
         .beat-dot {
             stroke: #eee;
             stroke-width: 0.5px;
-            transition: r 0.1s ease-out; /* Smooth radius transition */
+            transition: r 0.1s ease-out;
         }
-        /* Class added during flash */
         .beat-dot.playing {
            /* Styles applied via D3 transition */
         }
@@ -40,6 +38,7 @@
             stroke-width: 1px;
             stroke-dasharray: 3 2;
             opacity: 0.3;
+            transition: stroke 0.3s ease-in-out; /* Smooth color transition */
         }
         /* Focus rings */
         input[type="range"]:focus, select:focus, input[type="checkbox"]:focus {
@@ -70,40 +69,34 @@
         /* Style checkbox */
         input[type="checkbox"] {
             appearance: none;
-            background-color: #4b5563; /* gray-600 */
-            border: 1px solid #6b7280; /* gray-500 */
-            border-radius: 0.25rem;
-            width: 1em;
-            height: 1em;
-            display: inline-block;
-            vertical-align: middle;
-            position: relative;
-            cursor: pointer;
-            flex-shrink: 0; /* Prevent checkbox from shrinking */
+            background-color: #4b5563; border: 1px solid #6b7280; border-radius: 0.25rem;
+            width: 1em; height: 1em; display: inline-block; vertical-align: middle;
+            position: relative; cursor: pointer; flex-shrink: 0;
         }
-        input[type="checkbox"]:checked {
-            background-color: #60a5fa; /* blue-400 */
-            border-color: #3b82f6; /* blue-500 */
-        }
+        input[type="checkbox"]:checked { background-color: #60a5fa; border-color: #3b82f6; }
         input[type="checkbox"]:checked::after {
-            content: '';
-            display: block;
-            width: 0.3em;
-            height: 0.6em;
-            border: solid white;
-            border-width: 0 2px 2px 0;
-            transform: rotate(45deg);
-            position: absolute;
-            left: 0.28em;
-            top: 0.05em;
+            content: ''; display: block; width: 0.3em; height: 0.6em;
+            border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg);
+            position: absolute; left: 0.28em; top: 0.05em;
         }
-        /* Style for the note indicator line */
-        .note-indicator-line {
-            stroke: #ffffff; /* White */
-            stroke-width: 1.5px; /* Slightly thinner */
-            opacity: 0.5; /* Slightly less opaque */
-        }
+        /* Note Indicator Line */
+        .note-indicator-line { stroke: #ffffff; stroke-width: 1.5px; opacity: 0.5; }
 
+        /* Transition for collapsible section height */
+        #rhythm-controls-container {
+            transition: max-height 0.5s ease-in-out, opacity 0.3s ease-in-out, margin-top 0.5s ease-in-out, padding-top 0.5s ease-in-out, padding-bottom 0.5s ease-in-out; /* Added margin/padding */
+            overflow: hidden;
+            max-height: 2000px; /* Set a large max-height for expanded state */
+            opacity: 1;
+        }
+        #rhythm-controls-container.collapsed {
+            max-height: 0;
+            opacity: 0;
+            margin-top: 0 !important; /* Remove margin when collapsed */
+            padding-top: 0 !important; /* Remove padding when collapsed */
+            padding-bottom: 0 !important;
+            /* Add pointer-events: none? Maybe not needed if max-height is 0 */
+        }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -121,12 +114,23 @@
         <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="flex flex-col space-y-4">
                 <div class="p-3 border border-gray-700 rounded-md flex flex-col space-y-2">
-                    <label for="tempo" class="font-medium text-sm whitespace-nowrap text-gray-200">Tempo (BPM): <span id="tempoValue" class="font-bold text-indigo-400">120.0</span></label>
-                    <input type="range" id="tempo" min="1" max="240" value="120" step="0.1" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+                    <label for="tempo" class="font-medium text-sm whitespace-nowrap text-gray-200">Tempo (BPM): <span id="tempoValue" class="font-bold text-indigo-400">3.00</span></label>
+                    <input type="range" id="tempo" min="1" max="40" value="3.0" step="0.05" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
                 </div>
                 <div class="p-3 border border-gray-700 rounded-md flex flex-col space-y-2">
                     <label for="volume" class="font-medium text-sm whitespace-nowrap text-gray-200">Volume: <span id="volumeValue" class="font-bold text-indigo-400">0.50</span></label>
                     <input type="range" id="volume" min="0" max="1" value="0.5" step="0.05" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+                </div>
+                 <div class="p-3 border border-gray-700 rounded-md flex flex-col space-y-2">
+                    <label for="colorTheme" class="font-medium text-sm whitespace-nowrap text-gray-200">Color Theme:</label>
+                    <select id="colorTheme" class="w-full p-1 text-sm border border-gray-600 bg-gray-700 text-gray-100 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        <option value="rainbow" selected>Rainbow (HSL)</option>
+                        <option value="grayscale">Grayscale</option>
+                        <option value="blues">Blues</option>
+                        <option value="greens">Greens</option>
+                        <option value="warm">Warm</option>
+                        <option value="cool">Cool</option>
+                    </select>
                 </div>
             </div>
 
@@ -181,6 +185,12 @@
              </div>
         </div>
 
+        <div class="w-full mt-4 pt-2 border-t border-gray-700">
+             <button id="toggleRhythmControls" class="w-full flex justify-between items-center px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 rounded-md focus:outline-none">
+                 <span>Individual Rhythm Settings</span>
+                 <svg id="collapse-arrow" class="w-4 h-4 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                 </button>
+        </div>
 
         <div id="rhythm-controls-container" class="w-full space-y-2 mt-2">
             </div>
@@ -188,19 +198,7 @@
 
     <div id="visualization">
         <svg id="viz-svg" class="bg-gray-900 rounded-full">
-             <defs>
-                <filter id="glow">
-                    <feGaussianBlur stdDeviation="3.5" result="coloredBlur"/>
-                     <feComponentTransfer in="coloredBlur" result="brighterBlur">
-                        <feFuncA type="linear" slope="1.5"/>
-                    </feComponentTransfer>
-                    <feMerge>
-                        <feMergeNode in="brighterBlur"/>
-                        <feMergeNode in="SourceGraphic"/>
-                    </feMerge>
-                </filter>
-            </defs>
-            </svg>
+             </svg>
     </div>
 
     <script>
@@ -213,96 +211,122 @@
             const WAVEFORM_2_DELAY = 0.008;
             const WAVEFORM_3_DELAY = 0.016;
             const NORMAL_DOT_RADIUS = 8;
-            const FLASH_DOT_RADIUS = 12; // Increased flash radius
+            const FLASH_DOT_RADIUS = 12;
 
-            function generateHslColors(count) {
+            // --- Color Theme Generation ---
+            function generateHslColors(count, saturation = 70, lightness = 60) {
                 const colors = [];
-                const saturation = 70; const lightness = 60;
                 for (let i = 0; i < count; i++) {
                     const hue = Math.round((i * (360 / count))) % 360;
                     const hex = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
                     const baseHue = Math.round(hue / 30) * 30;
-                    let colorName = 'gray';
+                    let colorName = 'gray'; // Default for Tailwind class approximation
                     if (baseHue === 0 || baseHue === 360) colorName = 'red';
                     else if (baseHue === 30) colorName = 'orange'; else if (baseHue === 60) colorName = 'yellow';
                     else if (baseHue === 90 || baseHue === 120) colorName = 'lime'; else if (baseHue === 150) colorName = 'emerald';
                     else if (baseHue === 180) colorName = 'cyan'; else if (baseHue === 210) colorName = 'sky';
                     else if (baseHue === 240) colorName = 'indigo'; else if (baseHue === 270) colorName = 'purple';
                     else if (baseHue === 300) colorName = 'fuchsia'; else if (baseHue === 330) colorName = 'pink';
-                    colors.push({ name: `${colorName}-${hue}`, hex: hex, bg: `bg-${colorName}-900`, border: `border-${colorName}-500`, text: `text-${colorName}-400`, slider: `bg-${colorName}-700` });
+                    // Store both the precise HSL and approximate Tailwind classes
+                    colors.push({ name: `hsl-${i}`, hex: hex, bg: `bg-${colorName}-900`, border: `border-${colorName}-500`, text: `text-${colorName}-400`, slider: `bg-${colorName}-700` });
                 }
                 return colors;
             }
-            const RHYTHM_COLORS = generateHslColors(MAX_RHYTHMS);
+            function generateGrayscaleColors(count) {
+                const colors = [];
+                for (let i = 0; i < count; i++) {
+                    const lightness = Math.round(25 + (i * (65 / (count -1 || 1))));
+                    const hex = `hsl(0, 0%, ${lightness}%)`;
+                    // Approximate Tailwind classes for grayscale
+                    let twClassNum = Math.round(lightness / 100 * 8) * 100 + 100; // e.g., 100 to 900
+                    if(twClassNum < 100) twClassNum = 100; if(twClassNum > 900) twClassNum = 900;
+                    let textClassNum = Math.max(100, twClassNum - 200); // Lighter text for dark bg
+                    let sliderClassNum = Math.min(900, twClassNum + 100); // Darker slider
+
+                    colors.push({ name: `gray-${i}`, hex: hex, bg: `bg-gray-${sliderClassNum}`, border: `border-gray-${twClassNum}`, text: `text-gray-${textClassNum}`, slider: `bg-gray-${sliderClassNum}` });
+                }
+                return colors;
+            }
+             function generateMonochromaticColors(count, baseHue, minSat = 30, maxSat = 80, minLight = 40, maxLight = 75) {
+                 const colors = [];
+                 // Find base color name for Tailwind approximation
+                 const baseHueApprox = Math.round(baseHue / 30) * 30;
+                 let colorName = 'gray';
+                 if (baseHueApprox === 0 || baseHueApprox === 360) colorName = 'red'; else if (baseHueApprox === 30) colorName = 'orange';
+                 else if (baseHueApprox === 60) colorName = 'yellow'; else if (baseHueApprox === 90 || baseHueApprox === 120) colorName = 'lime';
+                 else if (baseHueApprox === 150) colorName = 'emerald'; else if (baseHueApprox === 180) colorName = 'cyan';
+                 else if (baseHueApprox === 210) colorName = 'sky'; else if (baseHueApprox === 240) colorName = 'indigo';
+                 else if (baseHueApprox === 270) colorName = 'purple'; else if (baseHueApprox === 300) colorName = 'fuchsia';
+                 else if (baseHueApprox === 330) colorName = 'pink';
+
+                 for (let i = 0; i < count; i++) {
+                    const sat = Math.round(minSat + (i * ((maxSat - minSat) / (count - 1 || 1))));
+                    const light = Math.round(maxLight - (i * ((maxLight - minLight) / (count - 1 || 1))));
+                    const hex = `hsl(${baseHue}, ${sat}%, ${light}%)`;
+                    // Approximate Tailwind classes
+                    let twClassNum = Math.round(light / 100 * 8) * 100 + 100;
+                    if(twClassNum < 100) twClassNum = 100; if(twClassNum > 900) twClassNum = 900;
+                    let textClassNum = Math.max(100, twClassNum - 200);
+                    let sliderClassNum = Math.min(900, twClassNum + 100);
+
+                    colors.push({ name: `mono-${baseHue}-${i}`, hex: hex, bg: `bg-${colorName}-900`, border: `border-${colorName}-500`, text: `text-${colorName}-400`, slider: `bg-${colorName}-700` });
+                 }
+                return colors;
+            }
+
+            const THEMES = {
+                rainbow: generateHslColors(MAX_RHYTHMS),
+                grayscale: generateGrayscaleColors(MAX_RHYTHMS),
+                blues: generateMonochromaticColors(MAX_RHYTHMS, 220),
+                greens: generateMonochromaticColors(MAX_RHYTHMS, 130),
+                warm: generateMonochromaticColors(MAX_RHYTHMS, 30, 60, 90, 50, 70),
+                cool: generateMonochromaticColors(MAX_RHYTHMS, 200, 40, 80, 45, 70),
+            };
+            let currentThemeName = 'rainbow';
 
 
             // --- Audio Setup ---
-            let audioContext;
-            let masterGain;
-            let echoDelayNode;
-            let echoFeedbackGainNode;
-            let echoEnabled = false;
-            let echoDelayTime = 0.3;
-            let echoFeedbackAmount = 0.4;
-            let isPlaying = false;
-            let schedulerIntervalId = null;
-            let animationFrameId = null;
-            let startTime = 0;
+            let audioContext; let masterGain; let echoDelayNode; let echoFeedbackGainNode;
+            let echoEnabled = false; let echoDelayTime = 0.3; let echoFeedbackAmount = 0.4;
+            let isPlaying = false; let schedulerIntervalId = null; let animationFrameId = null; let startTime = 0;
 
             // --- Parameters ---
-            let tempo = 120.0;
-            let volume = 0.5;
-            let numActiveRhythms = 2;
-            let soundType1 = 'sine';
-            let soundType2 = 'square';
-            let soundType3 = 'sawtooth';
-            let soundType2Enabled = false;
-            let soundType3Enabled = false;
-            let cycleDuration = 60.0 / tempo;
-            let rhythmParams = [];
+            let tempo = 3.0; let volume = 0.5; let numActiveRhythms = 2;
+            let soundType1 = 'sine'; let soundType2 = 'square'; let soundType3 = 'sawtooth';
+            let soundType2Enabled = false; let soundType3Enabled = false;
+            let cycleDuration = 60.0 / tempo; let rhythmParams = [];
 
             // --- D3 Visualization Setup ---
             const svgElement = document.getElementById('viz-svg');
             const svg = d3.select(svgElement);
-            const defs = svg.select('defs');
-            let width = svgElement.clientWidth;
-            let height = svgElement.clientHeight;
+            // *** REMOVED: Defs selection ***
+            let width = svgElement.clientWidth; let height = svgElement.clientHeight;
             let baseRadius = Math.min(width, height) / 2 * 0.9;
             let center = { x: width / 2, y: height / 2 };
-            const vizGroup = svg.append("g")
-                .attr("transform", `translate(${center.x}, ${center.y})`);
-
-            // *** MODIFIED: Note Indicator Line at 3 o'clock ***
+            const vizGroup = svg.append("g").attr("transform", `translate(${center.x}, ${center.y})`);
             const noteIndicatorLine = vizGroup.append("line")
                 .attr("class", "note-indicator-line")
-                .attr("x1", 0) // Start at center x
-                .attr("y1", 0) // Start at center y
-                .attr("x2", baseRadius * 1.02) // Extend slightly beyond the outermost possible ring
-                .attr("y2", 0); // Keep y constant for horizontal line
+                .attr("x1", 0).attr("y1", 0).attr("x2", baseRadius * 1.02).attr("y2", 0);
 
             // --- DOM Element References ---
             const startStopButton = document.getElementById('startStopButton');
-            const tempoSlider = document.getElementById('tempo');
-            const tempoValueSpan = document.getElementById('tempoValue');
-            const volumeSlider = document.getElementById('volume');
-            const volumeValueSpan = document.getElementById('volumeValue');
-            const numRhythmsSlider = document.getElementById('numRhythms');
-            const numRhythmsValueSpan = document.getElementById('numRhythmsValue');
-            const soundType1Select = document.getElementById('soundType1');
-            const soundType2Select = document.getElementById('soundType2');
-            const soundType3Select = document.getElementById('soundType3');
-            const soundType2EnabledCheckbox = document.getElementById('soundType2Enabled');
-            const soundType3EnabledCheckbox = document.getElementById('soundType3Enabled');
-            const echoEnabledCheckbox = document.getElementById('echoEnabled');
-            const echoDelaySlider = document.getElementById('echoDelay');
-            const echoDelayValueSpan = document.getElementById('echoDelayValue');
-            const echoFeedbackSlider = document.getElementById('echoFeedback');
-            const echoFeedbackValueSpan = document.getElementById('echoFeedbackValue');
+            const tempoSlider = document.getElementById('tempo'); const tempoValueSpan = document.getElementById('tempoValue');
+            const volumeSlider = document.getElementById('volume'); const volumeValueSpan = document.getElementById('volumeValue');
+            const numRhythmsSlider = document.getElementById('numRhythms'); const numRhythmsValueSpan = document.getElementById('numRhythmsValue');
+            const soundType1Select = document.getElementById('soundType1'); const soundType2Select = document.getElementById('soundType2'); const soundType3Select = document.getElementById('soundType3');
+            const soundType2EnabledCheckbox = document.getElementById('soundType2Enabled'); const soundType3EnabledCheckbox = document.getElementById('soundType3Enabled');
+            const echoEnabledCheckbox = document.getElementById('echoEnabled'); const echoDelaySlider = document.getElementById('echoDelay'); const echoDelayValueSpan = document.getElementById('echoDelayValue');
+            const echoFeedbackSlider = document.getElementById('echoFeedback'); const echoFeedbackValueSpan = document.getElementById('echoFeedbackValue');
             const rhythmControlsContainer = document.getElementById('rhythm-controls-container');
+            const colorThemeSelect = document.getElementById('colorTheme');
+            const toggleRhythmControlsButton = document.getElementById('toggleRhythmControls');
+            const collapseArrow = document.getElementById('collapse-arrow');
+
 
             // --- Helper Functions ---
             function getRhythmColor(index) {
-                return RHYTHM_COLORS[index % RHYTHM_COLORS.length];
+                const currentPalette = THEMES[currentThemeName] || THEMES.rainbow;
+                return currentPalette[index % currentPalette.length];
             }
 
             function calculateRadius(index, total) {
@@ -316,28 +340,91 @@
             function initOrUpdateRhythmParams(index) {
                 const beatsSlider = document.getElementById(`rhythmBeats_${index}`);
                 const freqSlider = document.getElementById(`freqSlider_${index}`);
-
-                if (!rhythmParams[index]) {
-                    rhythmParams[index] = {};
-                }
-
-                const defaultBeats = index + 2; // Fixed default beats: 2, 3, 4... 33
+                if (!rhythmParams[index]) { rhythmParams[index] = {}; }
+                const defaultBeats = index + 2;
                 const defaultFreq = 200 + index * (1800 / MAX_RHYTHMS);
-
                 rhythmParams[index].beats = beatsSlider ? parseInt(beatsSlider.value) : defaultBeats;
                 rhythmParams[index].freq = freqSlider ? parseFloat(freqSlider.value) : defaultFreq;
                 cycleDuration = 60.0 / tempo;
                 rhythmParams[index].interval = rhythmParams[index].beats > 0 ? cycleDuration / rhythmParams[index].beats : Infinity;
                 rhythmParams[index].nextNoteTime = audioContext ? audioContext.currentTime : 0;
                 rhythmParams[index].color = getRhythmColor(index);
-
                 const beatsValueSpan = document.getElementById(`rhythmValue_${index}`);
                 const freqValueSpan = document.getElementById(`freqValue_${index}`);
                 if (beatsValueSpan) beatsValueSpan.textContent = rhythmParams[index].beats;
                 if (freqValueSpan) freqValueSpan.textContent = rhythmParams[index].freq.toFixed(0);
-
                 rhythmParams[index].radius = calculateRadius(index, numActiveRhythms);
             }
+
+            // *** MODIFIED: updateRhythmStyles to apply theme classes ***
+            function updateRhythmStyles() {
+                 for (let i = 0; i < numActiveRhythms; i++) {
+                    const param = rhythmParams[i];
+                    if (!param) continue;
+
+                    param.color = getRhythmColor(i); // Recalculate color based on theme
+
+                    // Update SVG colors
+                    if (param.path) { param.path.style("stroke", param.color.hex); }
+                    if (param.dot) { param.dot.attr("fill", param.color.hex); }
+
+                    // Update Control colors by replacing classes
+                    const controlDiv = document.getElementById(`rhythmControls_${i}`);
+                    const beatsLabel = controlDiv?.querySelector(`label[for="rhythmBeats_${i}"]`);
+                    const beatsValueSpan = document.getElementById(`rhythmValue_${i}`);
+                    const beatsSlider = document.getElementById(`rhythmBeats_${i}`);
+                    const freqLabel = controlDiv?.querySelector(`label[for="freqSlider_${i}"]`);
+                    const freqValueSpan = document.getElementById(`freqValue_${i}`);
+                    const freqSlider = document.getElementById(`freqSlider_${i}`);
+
+                    // Remove old color classes before adding new ones
+                    const removeColorClasses = (element, prefix) => {
+                        if (!element) return;
+                        const classesToRemove = [];
+                        element.classList.forEach(cls => {
+                            if (cls.startsWith(prefix)) {
+                                classesToRemove.push(cls);
+                            }
+                        });
+                        element.classList.remove(...classesToRemove);
+                    };
+
+                    if (controlDiv) {
+                        removeColorClasses(controlDiv, 'border-');
+                        controlDiv.classList.add(param.color.border || 'border-gray-500'); // Add new border color
+                    }
+                    if (beatsLabel) {
+                        removeColorClasses(beatsLabel, 'text-');
+                        beatsLabel.classList.add(param.color.text || 'text-gray-300');
+                    }
+                     if (beatsValueSpan) {
+                        // Value span might inherit color, or set explicitly if needed
+                        // removeColorClasses(beatsValueSpan, 'text-');
+                        // beatsValueSpan.classList.add(param.color.text || 'text-gray-100');
+                        beatsValueSpan.textContent = param.beats; // Update text content too
+                    }
+                    if (beatsSlider) {
+                        removeColorClasses(beatsSlider, 'bg-');
+                        beatsSlider.classList.add(param.color.slider || 'bg-gray-600');
+                        beatsSlider.classList.add('bg-opacity-50'); // Re-add opacity
+                    }
+                     if (freqLabel) {
+                        removeColorClasses(freqLabel, 'text-');
+                        freqLabel.classList.add(param.color.text || 'text-gray-300');
+                    }
+                     if (freqValueSpan) {
+                        // removeColorClasses(freqValueSpan, 'text-');
+                        // freqValueSpan.classList.add(param.color.text || 'text-gray-100');
+                         freqValueSpan.textContent = param.freq.toFixed(0); // Update text content too
+                    }
+                     if (freqSlider) {
+                        removeColorClasses(freqSlider, 'bg-');
+                        freqSlider.classList.add(param.color.slider || 'bg-gray-600');
+                        freqSlider.classList.add('bg-opacity-50'); // Re-add opacity
+                    }
+                 }
+            }
+
 
             function updateAllParameters() {
                 tempo = parseFloat(tempoSlider.value);
@@ -351,7 +438,7 @@
                 echoDelayTime = parseFloat(echoDelaySlider.value);
                 echoFeedbackAmount = parseFloat(echoFeedbackSlider.value);
 
-                tempoValueSpan.textContent = tempo.toFixed(1);
+                tempoValueSpan.textContent = tempo.toFixed(2);
                 volumeValueSpan.textContent = volume.toFixed(2);
                 echoDelayValueSpan.textContent = echoDelayTime.toFixed(2);
                 echoFeedbackValueSpan.textContent = echoFeedbackAmount.toFixed(2);
@@ -361,7 +448,6 @@
                 if (masterGain && audioContext) {
                     masterGain.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.05);
                 }
-
                 if (echoDelayNode && echoFeedbackGainNode && audioContext) {
                     echoDelayNode.delayTime.linearRampToValueAtTime(echoDelayTime, audioContext.currentTime + 0.05);
                     const targetFeedbackGain = echoEnabled ? echoFeedbackAmount : 0;
@@ -370,20 +456,26 @@
 
                 for (let i = 0; i < numActiveRhythms; i++) {
                     if (rhythmParams[i]) {
-                        initOrUpdateRhythmParams(i);
+                         cycleDuration = 60.0 / tempo;
+                         rhythmParams[i].interval = rhythmParams[i].beats > 0 ? cycleDuration / rhythmParams[i].beats : Infinity;
+                         rhythmParams[i].freq = parseFloat(document.getElementById(`freqSlider_${i}`)?.value || rhythmParams[i].freq);
+                         rhythmParams[i].beats = parseInt(document.getElementById(`rhythmBeats_${i}`)?.value || rhythmParams[i].beats);
                     }
                 }
+                 updateRhythmStyles(); // Apply theme colors
+
 
                 if (isPlaying && audioContext) {
                     const currentTime = audioContext.currentTime;
-                    rhythmParams.slice(0, numActiveRhythms).forEach(param => {
+                     rhythmParams.slice(0, numActiveRhythms).forEach(param => {
                         if (param) param.nextNoteTime = currentTime;
-                    });
+                     });
                     startTime = currentTime;
                 }
-                 handleResize(); // Update viz radii/positions and indicator line
+                 handleResize();
             }
 
+            // Creates/removes controls/SVG elements based on numRhythms
             function updateRhythmControlsAndVisuals() {
                 const newNumRhythms = parseInt(numRhythmsSlider.value);
                 numRhythmsValueSpan.textContent = newNumRhythms;
@@ -392,70 +484,57 @@
                 while (rhythmControlsContainer.children.length > newNumRhythms) {
                     rhythmControlsContainer.removeChild(rhythmControlsContainer.lastChild);
                 }
-
                 for (let i = rhythmControlsContainer.children.length; i < newNumRhythms; i++) {
-                    const color = getRhythmColor(i);
+                    const color = getRhythmColor(i); // Get initial color based on current theme
                     const controlDiv = document.createElement('div');
                     controlDiv.id = `rhythmControls_${i}`;
-                    controlDiv.className = `rhythm-controls w-full flex flex-col sm:flex-row items-center justify-between space-y-1 sm:space-y-0 sm:space-x-3 p-2 border-l-4 ${color.border} bg-gray-900 bg-opacity-40 rounded-md`;
+                    // Apply theme border color, but keep bg/text generic for now
+                    controlDiv.className = `rhythm-controls w-full flex flex-col sm:flex-row items-center justify-between space-y-1 sm:space-y-0 sm:space-x-3 p-2 border-l-4 ${color.border || 'border-gray-500'} bg-gray-900 bg-opacity-40 rounded-md`;
 
-                    if (!rhythmParams[i]) {
-                        initOrUpdateRhythmParams(i); // Use fixed default beats here
-                    }
+                    if (!rhythmParams[i]) { initOrUpdateRhythmParams(i); }
                     const currentParams = rhythmParams[i];
 
+                    // Apply theme colors to labels and sliders here during creation
                     controlDiv.innerHTML = `
-                        <label for="rhythmBeats_${i}" class="font-medium text-xs whitespace-nowrap ${color.text}">Rhythm ${i + 1} Beats: <span id="rhythmValue_${i}" class="font-bold">${currentParams.beats}</span></label>
-                        <input type="range" id="rhythmBeats_${i}" min="2" max="33" value="${currentParams.beats}" step="1" class="w-full h-2 ${color.slider} bg-opacity-50 rounded-lg appearance-none cursor-pointer">
-                        <label for="freqSlider_${i}" class="font-medium text-xs whitespace-nowrap ml-0 sm:ml-2 ${color.text}">Freq ${i + 1} (Hz): <span id="freqValue_${i}" class="font-bold">${currentParams.freq.toFixed(0)}</span></label>
-                        <input type="range" id="freqSlider_${i}" min="50" max="4000" value="${currentParams.freq}" step="5" class="w-full h-2 ${color.slider} bg-opacity-50 rounded-lg appearance-none cursor-pointer">
+                        <label for="rhythmBeats_${i}" class="font-medium text-xs whitespace-nowrap ${color.text || 'text-gray-300'}">Rhythm ${i + 1} Beats: <span id="rhythmValue_${i}" class="font-bold ${color.text || 'text-gray-100'}">${currentParams.beats}</span></label>
+                        <input type="range" id="rhythmBeats_${i}" min="2" max="33" value="${currentParams.beats}" step="1" class="w-full h-2 ${color.slider || 'bg-gray-600'} bg-opacity-50 rounded-lg appearance-none cursor-pointer">
+                        <label for="freqSlider_${i}" class="font-medium text-xs whitespace-nowrap ml-0 sm:ml-2 ${color.text || 'text-gray-300'}">Freq ${i + 1} (Hz): <span id="freqValue_${i}" class="font-bold ${color.text || 'text-gray-100'}">${currentParams.freq.toFixed(0)}</span></label>
+                        <input type="range" id="freqSlider_${i}" min="50" max="4000" value="${currentParams.freq}" step="5" class="w-full h-2 ${color.slider || 'bg-gray-600'} bg-opacity-50 rounded-lg appearance-none cursor-pointer">
                     `;
                     rhythmControlsContainer.appendChild(controlDiv);
-
                     document.getElementById(`rhythmBeats_${i}`).addEventListener('input', updateAllParameters);
                     document.getElementById(`freqSlider_${i}`).addEventListener('input', updateAllParameters);
                 }
 
                 // --- Update Visuals (SVG) ---
-                while (rhythmParams.length < newNumRhythms) {
-                    initOrUpdateRhythmParams(rhythmParams.length);
-                }
+                while (rhythmParams.length < newNumRhythms) { initOrUpdateRhythmParams(rhythmParams.length); }
                 rhythmParams.length = newNumRhythms;
                 numActiveRhythms = newNumRhythms;
 
                 for(let i = 0; i < numActiveRhythms; i++) {
-                    if (rhythmParams[i]) {
-                        rhythmParams[i].radius = calculateRadius(i, numActiveRhythms);
-                    }
+                    if (rhythmParams[i]) { rhythmParams[i].radius = calculateRadius(i, numActiveRhythms); }
                 }
 
-                const updatePaths = vizGroup.selectAll(".path-circle.dynamic-viz")
-                    .data(rhythmParams, (d, i) => i);
+                const updatePaths = vizGroup.selectAll(".path-circle.dynamic-viz").data(rhythmParams, (d, i) => i);
                 updatePaths.exit().remove();
-                updatePaths.enter()
-                    .append("circle")
-                    .attr("class", "path-circle dynamic-viz")
+                updatePaths.enter().append("circle").attr("class", "path-circle dynamic-viz")
                     .merge(updatePaths)
                     .attr("id", (d, i) => `path_${i}`)
                     .style("stroke", d => d.color.hex)
                     .each(function(d) { d.path = d3.select(this); })
                     .attr("r", d => d.radius);
 
-                const updateDots = vizGroup.selectAll(".beat-dot.dynamic-viz")
-                    .data(rhythmParams, (d, i) => i);
+                const updateDots = vizGroup.selectAll(".beat-dot.dynamic-viz").data(rhythmParams, (d, i) => i);
                 updateDots.exit().remove();
-                updateDots.enter()
-                    .append("circle")
-                    .attr("class", "beat-dot dynamic-viz")
-                    .attr("filter", "url(#glow)")
+                updateDots.enter().append("circle").attr("class", "beat-dot dynamic-viz")
+                    // *** REMOVED: filter attribute ***
                     .merge(updateDots)
                     .attr("id", (d, i) => `dot_${i}`)
-                    .attr("r", NORMAL_DOT_RADIUS) // Use constant for normal radius
+                    .attr("r", NORMAL_DOT_RADIUS)
                     .attr("fill", d => d.color.hex)
                     .style("opacity", null)
                     .each(function(d) { d.dot = d3.select(this); })
-                    .attr("cx", d => d.radius)
-                    .attr("cy", 0);
+                    .attr("cx", d => d.radius).attr("cy", 0);
 
                 updateAllParameters(); // Recalculate intervals, apply radii, etc.
             }
@@ -495,14 +574,12 @@
                     const env = audioContext.createGain();
                     env.gain.setValueAtTime(1.0, startTime);
                     env.gain.exponentialRampToValueAtTime(0.001, startTime + noteDuration);
-                    osc.connect(env);
-                    env.connect(gainNode); // Connect to masterGain
-                    osc.start(startTime);
-                    osc.stop(startTime + noteDuration + 0.05);
+                    osc.connect(env); env.connect(gainNode);
+                    osc.start(startTime); osc.stop(startTime + noteDuration + 0.05);
                 };
-                createOsc(soundType1, frequency, time); // Wave 1 (no delay)
-                if (soundType2Enabled) { createOsc(soundType2, frequency, time + WAVEFORM_2_DELAY); } // Wave 2 (delay)
-                if (soundType3Enabled) { createOsc(soundType3, frequency, time + WAVEFORM_3_DELAY); } // Wave 3 (delay)
+                createOsc(soundType1, frequency, time);
+                if (soundType2Enabled) { createOsc(soundType2, frequency, time + WAVEFORM_2_DELAY); }
+                if (soundType3Enabled) { createOsc(soundType3, frequency, time + WAVEFORM_3_DELAY); }
             }
 
             // --- Scheduler ---
@@ -514,7 +591,7 @@
                     if (!param || !param.interval || param.interval === Infinity) continue;
                     while (param.nextNoteTime < currentTime + scheduleAheadTime) {
                         playNote(param.nextNoteTime, param.freq, masterGain);
-                        triggerVisualFlash(i, 100); // Increased duration slightly for visibility
+                        triggerVisualFlash(i, 100);
                         param.nextNoteTime += param.interval;
                     }
                 }
@@ -524,8 +601,7 @@
             function animateVisuals() {
                 if (!isPlaying || !audioContext) {
                     vizGroup.selectAll(".beat-dot.dynamic-viz").attr("transform", "rotate(0)");
-                    animationFrameId = null;
-                    return;
+                    animationFrameId = null; return;
                 }
                 const elapsed = audioContext.currentTime - startTime;
                 const cyclePhase = cycleDuration > 0 ? (elapsed % cycleDuration) / cycleDuration : 0;
@@ -539,85 +615,52 @@
                 animationFrameId = requestAnimationFrame(animateVisuals);
             }
 
-            // *** MODIFIED: triggerVisualFlash for better flash effect ***
+            // Refined flash function
             function triggerVisualFlash(index, durationMs = 100) {
                  const param = rhythmParams[index];
                  if (param && param.dot) {
-                    // Ensure dot is not already in a transition to avoid conflicts
-                    param.dot.interrupt();
-
+                    param.dot.interrupt(); // Stop previous transitions on this dot
                     param.dot.classed("playing", true)
-                       .transition()
-                       .duration(durationMs * 0.4) // Flash up duration
-                       .ease(d3.easeQuadOut) // Use an easing function
-                       .attr("r", FLASH_DOT_RADIUS) // Use constant for flash radius
-                       .style("opacity", 1.0) // Ensure full opacity
-                       .transition()
-                       .duration(durationMs * 0.6) // Fade back duration
-                       .ease(d3.easeQuadIn) // Use easing
-                       .attr("r", NORMAL_DOT_RADIUS) // Back to normal size
-                       .style("opacity", null) // Back to default opacity (let fill/CSS handle it)
-                       .on("end", function() { // Use 'function' to preserve 'this' context if needed
-                           // Check if still 'playing' class before removing, avoids race conditions
-                           if (d3.select(this).classed("playing")) {
-                               d3.select(this).classed("playing", false);
-                           }
-                       });
+                       .transition("flash-out").duration(durationMs * 0.4).ease(d3.easeQuadOut)
+                       .attr("r", FLASH_DOT_RADIUS).style("opacity", 1.0) // Explicit opacity for flash
+                       .transition("flash-in").duration(durationMs * 0.6).ease(d3.easeQuadIn)
+                       .attr("r", NORMAL_DOT_RADIUS).style("opacity", null) // Reset opacity
+                       .on("end", function() { d3.select(this).classed("playing", false); });
                  }
             }
 
             // --- Control Logic ---
             function start() {
-                 if (isPlaying) return;
-                if (!initAudioContext()) return;
-                isPlaying = true;
-                startStopButton.textContent = 'Stop';
+                 if (isPlaying) return; if (!initAudioContext()) return;
+                isPlaying = true; startStopButton.textContent = 'Stop';
                 startStopButton.classList.remove('bg-green-600', 'hover:bg-green-700', 'focus:ring-green-500');
                 startStopButton.classList.add('bg-red-600', 'hover:bg-red-700', 'focus:ring-red-500');
-                const currentTime = audioContext.currentTime;
-                startTime = currentTime;
-                rhythmParams.slice(0, numActiveRhythms).forEach(param => {
-                    if (param) param.nextNoteTime = currentTime;
-                });
+                const currentTime = audioContext.currentTime; startTime = currentTime;
+                rhythmParams.slice(0, numActiveRhythms).forEach(param => { if (param) param.nextNoteTime = currentTime; });
                 if (schedulerIntervalId) clearInterval(schedulerIntervalId);
-                scheduleNotes();
-                schedulerIntervalId = setInterval(scheduleNotes, schedulerFrequency);
+                scheduleNotes(); schedulerIntervalId = setInterval(scheduleNotes, schedulerFrequency);
                 if (animationFrameId) cancelAnimationFrame(animationFrameId);
                 animationFrameId = requestAnimationFrame(animateVisuals);
                 console.log("Playback started.");
             }
 
             function stop() {
-                 if (!isPlaying) return;
-                isPlaying = false;
-                startStopButton.textContent = 'Start';
+                 if (!isPlaying) return; isPlaying = false; startStopButton.textContent = 'Start';
                 startStopButton.classList.remove('bg-red-600', 'hover:bg-red-700', 'focus:ring-red-500');
                 startStopButton.classList.add('bg-green-600', 'hover:bg-green-700', 'focus:ring-green-500');
-                if (schedulerIntervalId) clearInterval(schedulerIntervalId);
-                schedulerIntervalId = null;
+                if (schedulerIntervalId) clearInterval(schedulerIntervalId); schedulerIntervalId = null;
                 if (animationFrameId) cancelAnimationFrame(animationFrameId);
                 animateVisuals(); // Reset visuals
-                // Stop any ongoing flash transitions immediately
                 vizGroup.selectAll(".beat-dot.dynamic-viz").interrupt().attr("r", NORMAL_DOT_RADIUS).style("opacity", null).classed("playing", false);
-                animationFrameId = null;
-                console.log("Playback stopped.");
+                animationFrameId = null; console.log("Playback stopped.");
             }
 
             // --- Resize Handling ---
             function handleResize() {
-                 width = svgElement.clientWidth;
-                height = svgElement.clientHeight;
-                baseRadius = Math.min(width, height) / 2 * 0.9;
-                center = { x: width / 2, y: height / 2 };
+                 width = svgElement.clientWidth; height = svgElement.clientHeight;
+                baseRadius = Math.min(width, height) / 2 * 0.9; center = { x: width / 2, y: height / 2 };
                 vizGroup.attr("transform", `translate(${center.x}, ${center.y})`);
-
-                // *** Update Note Indicator Line position on resize ***
-                noteIndicatorLine
-                    .attr("x1", 0) // Center x
-                    .attr("y1", 0) // Center y
-                    .attr("x2", baseRadius * 1.02) // Extend horizontally
-                    .attr("y2", 0); // Keep y at center
-
+                noteIndicatorLine.attr("x1", 0).attr("y1", 0).attr("x2", baseRadius * 1.02).attr("y2", 0); // Update line length
                 for (let i = 0; i < numActiveRhythms; i++) {
                     const param = rhythmParams[i];
                     if (param) {
@@ -626,11 +669,23 @@
                          if (param.dot) param.dot.attr("cx", param.radius);
                     }
                 }
-                if (isPlaying && animationFrameId) {
-                     animateVisuals();
-                } else {
-                     vizGroup.selectAll(".beat-dot.dynamic-viz").attr("transform", "rotate(0)");
-                }
+                if (isPlaying && animationFrameId) { animateVisuals(); }
+                else { vizGroup.selectAll(".beat-dot.dynamic-viz").attr("transform", "rotate(0)"); }
+            }
+
+            // --- Theme Change Handler ---
+            function handleThemeChange() {
+                currentThemeName = colorThemeSelect.value;
+                console.log("Theme changed to:", currentThemeName);
+                // Update styles of existing elements
+                updateRhythmStyles();
+                // No need to call updateAllParameters unless theme affects intervals etc.
+            }
+
+            // --- Collapse Handler ---
+            function toggleControlsCollapse() {
+                const isCollapsed = rhythmControlsContainer.classList.toggle('collapsed');
+                collapseArrow.style.transform = isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
             }
 
             // --- Event Listeners ---
@@ -646,18 +701,17 @@
             echoEnabledCheckbox.addEventListener('change', updateAllParameters);
             echoDelaySlider.addEventListener('input', updateAllParameters);
             echoFeedbackSlider.addEventListener('input', updateAllParameters);
+            colorThemeSelect.addEventListener('change', handleThemeChange);
+            toggleRhythmControlsButton.addEventListener('click', toggleControlsCollapse);
 
             let resizeTimeout;
-            window.addEventListener('resize', () => {
-                clearTimeout(resizeTimeout);
-                resizeTimeout = setTimeout(handleResize, 100);
-            });
+            window.addEventListener('resize', () => { clearTimeout(resizeTimeout); resizeTimeout = setTimeout(handleResize, 100); });
 
             // --- Initial Setup ---
             soundType2EnabledCheckbox.checked = soundType2Enabled;
             soundType3EnabledCheckbox.checked = soundType3Enabled;
             echoEnabledCheckbox.checked = echoEnabled;
-            updateRhythmControlsAndVisuals(); // Creates controls with correct defaults
+            updateRhythmControlsAndVisuals(); // Creates controls with correct defaults & initial theme colors
             updateAllParameters(); // Reads all initial values and applies them
 
 
