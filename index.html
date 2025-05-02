@@ -91,7 +91,7 @@
                 </div>
                 <div class="p-3 border border-gray-700 rounded-md flex flex-col space-y-3">
                     <span class="font-medium text-sm text-gray-200">Sound Waveforms:</span>
-                    <div class="flex flex-col space-y-1"> <label for="noteSustain" class="font-medium text-xs whitespace-nowrap text-gray-300">Sustain (s): <span id="noteSustainValue" class="font-bold text-gray-400">0.05</span></label> <input type="range" id="noteSustain" min="0.01" max="0.5" value="0.05" step="0.01" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"> </div>
+                    <div class="flex flex-col space-y-1"> <label for="noteSustain" class="font-medium text-xs whitespace-nowrap text-gray-300">Sustain (s): <span id="noteSustainValue" class="font-bold text-gray-400">0.05</span></label> <input type="range" id="noteSustain" min="0.01" max="0.5" value="0.20" step="0.01" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"> </div>
                      <hr class="border-gray-600 my-2"> <div class="flex items-center space-x-2"> <label for="soundType1" class="text-xs text-gray-300 flex-shrink-0 w-10">Wave 1:</label> <select id="soundType1" class="flex-grow p-1 text-xs border border-gray-600 bg-gray-700 text-gray-100 rounded-md focus:ring-blue-500 focus:border-blue-500"> <option value="sine" selected>Sine</option> <option value="square">Square</option> <option value="sawtooth">Sawtooth</option> <option value="triangle">Triangle</option> </select> </div>
                      <div class="flex items-center space-x-2"> <label for="soundType2" class="text-xs text-gray-300 flex-shrink-0 w-10">Wave 2:</label> <select id="soundType2" class="flex-grow p-1 text-xs border border-gray-600 bg-gray-700 text-gray-100 rounded-md focus:ring-blue-500 focus:border-blue-500"> <option value="sine">Sine</option> <option value="square" selected>Square</option> <option value="sawtooth">Sawtooth</option> <option value="triangle">Triangle</option> </select> <input type="checkbox" id="soundType2Enabled"> <label for="soundType2Enabled" class="text-xs text-gray-400 sr-only">Enable Wave 2</label> </div>
                      <div class="flex items-center space-x-2"> <label for="soundType3" class="text-xs text-gray-300 flex-shrink-0 w-10">Wave 3:</label> <select id="soundType3" class="flex-grow p-1 text-xs border border-gray-600 bg-gray-700 text-gray-100 rounded-md focus:ring-blue-500 focus:border-blue-500"> <option value="sine">Sine</option> <option value="square">Square</option> <option value="sawtooth" selected>Sawtooth</option> <option value="triangle">Triangle</option> </select> <input type="checkbox" id="soundType3Enabled"> <label for="soundType3Enabled" class="text-xs text-gray-400 sr-only">Enable Wave 3</label> </div>
@@ -211,7 +211,7 @@
             let numActiveRhythms = 16; // Default to 16
             let soundType1 = 'sine'; let soundType2 = 'square'; let soundType3 = 'sawtooth';
             let soundType2Enabled = false; let soundType3Enabled = false;
-            let noteSustainTime = 0.05;
+            let noteSustainTime = 0.20; // Changed from 0.05
             let cycleDuration = 60.0 / tempo; let rhythmParams = [];
             let trailsEnabled = true; let trailOpacity = 0.3; let trailWidth = 1.0; let trailDashArray = "3 2";
             let scaleRootNote = 9; // Default A
