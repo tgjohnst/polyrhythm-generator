@@ -3,158 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Polyrhythm Generator (Fullscreen)</title>
+    <title>Polyrhythm Generator (State Sharing)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         /* Custom styles */
-        html, body {
-             height: 100%; /* Ensure body takes full height */
-             margin: 0;
-             padding: 0;
-             background-color: black; /* Apply base background here */
-        }
-        body {
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100%; /* Ensure body stretches */
-        }
-        .beat-dot {
-            stroke: #eee;
-            stroke-width: 0.5px;
-            transition: r 0.1s ease-out;
-        }
-        .beat-dot.playing {
-           /* Styles applied via D3 transition */
-        }
-        /* Visualization container styles */
-        #visualization-container {
-            position: relative; /* Needed for absolute positioning of button */
-            width: 90%;
-            max-width: 800px;
-            aspect-ratio: 1 / 1;
-            margin: 1rem auto;
-            transition: all 0.3s ease-in-out; /* Smooth transition for fullscreen */
-        }
-        #viz-svg {
-            display: block; /* Remove extra space below SVG */
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            background-color: #1f2937; /* bg-gray-800 */
-        }
-        .path-circle {
-            fill: none;
-            transition: stroke 0.3s ease-in-out, opacity 0.3s ease-in-out, stroke-width 0.3s ease-in-out, stroke-dasharray 0.3s ease-in-out;
-        }
-        /* Focus rings */
-        input[type="range"]:focus, select:focus, input[type="checkbox"]:focus {
-            outline: 2px solid transparent;
-            outline-offset: 2px;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
-        }
-        button:focus {
-           outline: 2px solid transparent;
-           outline-offset: 2px;
-           box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
-        }
-        .rhythm-controls input[type="range"] {
-            flex-grow: 1;
-            min-width: 50px;
-        }
-        /* Style select dropdown */
-        select {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-            background-position: right 0.5rem center;
-            background-repeat: no-repeat;
-            background-size: 1.5em 1.5em;
-            padding-right: 2.5rem;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-        }
-        /* Style checkbox */
-        input[type="checkbox"] {
-            appearance: none;
-            background-color: #4b5563; border: 1px solid #6b7280; border-radius: 0.25rem;
-            width: 1em; height: 1em; display: inline-block; vertical-align: middle;
-            position: relative; cursor: pointer; flex-shrink: 0;
-        }
+        html, body { height: 100%; margin: 0; padding: 0; background-color: black; }
+        body { font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100%; }
+        .beat-dot { stroke: #eee; stroke-width: 0.5px; transition: r 0.1s ease-out; }
+        .beat-dot.playing { /* Styles applied via D3 transition */ }
+        #visualization-container { position: relative; width: 90%; max-width: 800px; aspect-ratio: 1 / 1; margin: 1rem auto; transition: all 0.3s ease-in-out; }
+        #viz-svg { display: block; width: 100%; height: 100%; border-radius: 50%; background-color: #1f2937; /* bg-gray-800 */ }
+        .path-circle { fill: none; transition: stroke 0.3s ease-in-out, opacity 0.3s ease-in-out, stroke-width 0.3s ease-in-out, stroke-dasharray 0.3s ease-in-out; }
+        input[type="range"]:focus, select:focus, input[type="checkbox"]:focus, input[type="text"]:focus { outline: 2px solid transparent; outline-offset: 2px; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); }
+        button:focus { outline: 2px solid transparent; outline-offset: 2px; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); }
+        .rhythm-controls input[type="range"] { flex-grow: 1; min-width: 50px; }
+        select { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em; padding-right: 2.5rem; -webkit-appearance: none; -moz-appearance: none; appearance: none; }
+        input[type="checkbox"] { appearance: none; background-color: #4b5563; border: 1px solid #6b7280; border-radius: 0.25rem; width: 1em; height: 1em; display: inline-block; vertical-align: middle; position: relative; cursor: pointer; flex-shrink: 0; }
         input[type="checkbox"]:checked { background-color: #60a5fa; border-color: #3b82f6; }
-        input[type="checkbox"]:checked::after {
-            content: ''; display: block; width: 0.3em; height: 0.6em;
-            border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg);
-            position: absolute; left: 0.28em; top: 0.05em;
-        }
-        /* Note Indicator Line */
+        input[type="checkbox"]:checked::after { content: ''; display: block; width: 0.3em; height: 0.6em; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); position: absolute; left: 0.28em; top: 0.05em; }
         .note-indicator-line { stroke: #ffffff; stroke-width: 1.5px; opacity: 0.5; }
-
-        /* Collapsible section */
-        #rhythm-controls-container {
-            transition: max-height 0.5s ease-in-out, opacity 0.3s ease-in-out, margin-top 0.5s ease-in-out, padding-top 0.5s ease-in-out, padding-bottom 0.5s ease-in-out;
-            overflow: hidden;
-            max-height: 2000px; opacity: 1;
-        }
-        #rhythm-controls-container.collapsed {
-            max-height: 0; opacity: 0; margin-top: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important;
-        }
-        /* Screen reader only */
+        #rhythm-controls-container { transition: max-height 0.5s ease-in-out, opacity 0.3s ease-in-out, margin-top 0.5s ease-in-out, padding-top 0.5s ease-in-out, padding-bottom 0.5s ease-in-out; overflow: hidden; max-height: 2000px; opacity: 1; }
+        #rhythm-controls-container.collapsed { max-height: 0; opacity: 0; margin-top: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; }
         .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
-        /* Github icon */
         .github-icon { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: middle; margin-left: 0.25em; fill: currentColor; }
-
-        /* --- Fullscreen Styles --- */
-        body.fullscreen-active > *:not(#visualization-container) {
-            display: none !important; /* Hide everything except the viz container */
-        }
-        #visualization-container:-webkit-full-screen { /* Safari */
-            width: 100%; height: 100%; max-width: none; margin: 0; padding: 0; background-color: #111827; /* bg-gray-900 */
-        }
-        #visualization-container:fullscreen { /* Standard */
-            width: 100%; height: 100%; max-width: none; margin: 0; padding: 0; background-color: #111827; /* bg-gray-900 */
-        }
-        /* *** MODIFIED: Removed max-width/max-height from fullscreen SVG *** */
-        #visualization-container:-webkit-full-screen #viz-svg {
-             border-radius: 0; /* Square corners in fullscreen */
-             /* Removed max-width/max-height */
-             margin: auto; /* Center the SVG if container is larger */
-        }
-         #visualization-container:fullscreen #viz-svg {
-             border-radius: 0;
-             /* Removed max-width/max-height */
-             margin: auto;
-        }
-
-        /* Fullscreen Toggle Button */
-        #fullscreen-button {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            padding: 0.5rem;
-            background-color: rgba(55, 65, 81, 0.6); /* bg-gray-700 with opacity */
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            z-index: 100; /* Ensure it's above SVG content */
-            opacity: 0.6; /* Default visibility */
-            transition: opacity 0.3s ease-in-out, background-color 0.3s ease-in-out;
-        }
-        #fullscreen-button:hover {
-            opacity: 1;
-            background-color: rgba(75, 85, 99, 0.8); /* bg-gray-600 slightly more opaque */
-        }
-        #visualization-container:-webkit-full-screen #fullscreen-button,
-        #visualization-container:fullscreen #fullscreen-button {
-            opacity: 1;
-        }
-        #fullscreen-button svg {
-            width: 1.5rem; /* 24px */
-            height: 1.5rem;
-            fill: #e5e7eb; /* gray-200 */
-        }
-
+        body.fullscreen-active > *:not(#visualization-container) { display: none !important; }
+        #visualization-container:-webkit-full-screen { width: 100%; height: 100%; max-width: none; margin: 0; padding: 0; background-color: #111827; }
+        #visualization-container:fullscreen { width: 100%; height: 100%; max-width: none; margin: 0; padding: 0; background-color: #111827; }
+        #visualization-container:-webkit-full-screen #viz-svg { border-radius: 0; margin: auto; }
+        #visualization-container:fullscreen #viz-svg { border-radius: 0; margin: auto; }
+        #fullscreen-button { position: absolute; top: 1rem; right: 1rem; padding: 0.5rem; background-color: rgba(55, 65, 81, 0.6); border: none; border-radius: 50%; cursor: pointer; z-index: 100; opacity: 0.6; transition: opacity 0.3s ease-in-out, background-color 0.3s ease-in-out; }
+        #fullscreen-button:hover { opacity: 1; background-color: rgba(75, 85, 99, 0.8); }
+        #visualization-container:-webkit-full-screen #fullscreen-button, #visualization-container:fullscreen #fullscreen-button { opacity: 1; }
+        #fullscreen-button svg { width: 1.5rem; height: 1.5rem; fill: #e5e7eb; }
+        #share-feedback { min-height: 1.5em; /* Reserve space */ }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -168,12 +50,8 @@
         <svg id="viz-svg" class="bg-gray-900 rounded-full">
              </svg>
          <button id="fullscreen-button" title="Toggle Fullscreen">
-             <svg id="fullscreen-enter-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                 <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
-             </svg>
-             <svg id="fullscreen-exit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="display: none;">
-                 <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
-             </svg>
+             <svg id="fullscreen-enter-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/> </svg>
+             <svg id="fullscreen-exit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="display: none;"> <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/> </svg>
          </button>
     </div>
 
@@ -195,45 +73,14 @@
                  <div class="p-3 border border-gray-700 rounded-md flex flex-col space-y-2">
                     <label for="colorTheme" class="font-medium text-sm whitespace-nowrap text-gray-200">Color Theme:</label>
                     <select id="colorTheme" class="w-full p-1 text-sm border border-gray-600 bg-gray-700 text-gray-100 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                        <option value="rainbow" selected>Rainbow (HSL)</option>
-                        <option value="grayscale">Grayscale</option>
-                        <option value="blues">Blues</option>
-                        <option value="greens">Greens</option>
-                        <option value="warm">Warm</option>
-                        <option value="cool">Cool</option>
-                        <option value="neon">Neon</option>
-                        <option value="pastel">Pastel</option>
-                        <option value="forest">Forest</option>
-                        <option value="ocean">Ocean</option>
-                        <option value="desert">Desert</option>
-                        <option value="volcano">Volcano</option>
-                        <option value="synthwave">Synthwave</option>
+                        <option value="rainbow" selected>Rainbow (HSL)</option> <option value="grayscale">Grayscale</option> <option value="blues">Blues</option> <option value="greens">Greens</option> <option value="warm">Warm</option> <option value="cool">Cool</option> <option value="neon">Neon</option> <option value="pastel">Pastel</option> <option value="forest">Forest</option> <option value="ocean">Ocean</option> <option value="desert">Desert</option> <option value="volcano">Volcano</option> <option value="synthwave">Synthwave</option>
                     </select>
                 </div>
                 <div class="p-3 border border-gray-700 rounded-md flex flex-col space-y-3">
-                     <div class="flex items-center justify-between">
-                         <span class="font-medium text-sm text-gray-200">Path Trails:</span>
-                         <div class="flex items-center space-x-2">
-                             <input type="checkbox" id="trailsEnabled" checked>
-                             <label for="trailsEnabled" class="text-xs text-gray-400">Show</label>
-                         </div>
-                     </div>
-                     <div class="flex flex-col space-y-1">
-                         <label for="trailOpacity" class="font-medium text-xs whitespace-nowrap text-gray-300">Opacity: <span id="trailOpacityValue" class="font-bold text-gray-400">0.3</span></label>
-                         <input type="range" id="trailOpacity" min="0" max="1" value="0.3" step="0.05" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
-                     </div>
-                     <div class="flex flex-col space-y-1">
-                         <label for="trailWidth" class="font-medium text-xs whitespace-nowrap text-gray-300">Width (px): <span id="trailWidthValue" class="font-bold text-gray-400">1.0</span></label>
-                         <input type="range" id="trailWidth" min="0.5" max="5" value="1.0" step="0.1" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
-                     </div>
-                     <div class="flex flex-col space-y-1">
-                         <label for="trailDash" class="font-medium text-xs whitespace-nowrap text-gray-300">Style:</label>
-                         <select id="trailDash" class="w-full p-1 text-xs border border-gray-600 bg-gray-700 text-gray-100 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                             <option value="none">Solid</option>
-                             <option value="3 2" selected>Dashed</option> <option value="1 2">Dotted</option>
-                             <option value="5 5">Long Dashed</option>
-                         </select>
-                     </div>
+                     <div class="flex items-center justify-between"> <span class="font-medium text-sm text-gray-200">Path Trails:</span> <div class="flex items-center space-x-2"> <input type="checkbox" id="trailsEnabled" checked> <label for="trailsEnabled" class="text-xs text-gray-400">Show</label> </div> </div>
+                     <div class="flex flex-col space-y-1"> <label for="trailOpacity" class="font-medium text-xs whitespace-nowrap text-gray-300">Opacity: <span id="trailOpacityValue" class="font-bold text-gray-400">0.3</span></label> <input type="range" id="trailOpacity" min="0" max="1" value="0.3" step="0.05" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"> </div>
+                     <div class="flex flex-col space-y-1"> <label for="trailWidth" class="font-medium text-xs whitespace-nowrap text-gray-300">Width (px): <span id="trailWidthValue" class="font-bold text-gray-400">1.0</span></label> <input type="range" id="trailWidth" min="0.5" max="5" value="1.0" step="0.1" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"> </div>
+                     <div class="flex flex-col space-y-1"> <label for="trailDash" class="font-medium text-xs whitespace-nowrap text-gray-300">Style:</label> <select id="trailDash" class="w-full p-1 text-xs border border-gray-600 bg-gray-700 text-gray-100 rounded-md focus:ring-blue-500 focus:border-blue-500"> <option value="none">Solid</option> <option value="3 2" selected>Dashed</option> <option value="1 2">Dotted</option> <option value="5 5">Long Dashed</option> </select> </div>
                 </div>
             </div>
 
@@ -244,67 +91,39 @@
                 </div>
                 <div class="p-3 border border-gray-700 rounded-md flex flex-col space-y-3">
                     <span class="font-medium text-sm text-gray-200">Sound Waveforms:</span>
-                    <div class="flex flex-col space-y-1">
-                         <label for="noteSustain" class="font-medium text-xs whitespace-nowrap text-gray-300">Sustain (s): <span id="noteSustainValue" class="font-bold text-gray-400">0.05</span></label>
-                         <input type="range" id="noteSustain" min="0.01" max="0.5" value="0.05" step="0.01" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+                    <div class="flex flex-col space-y-1"> <label for="noteSustain" class="font-medium text-xs whitespace-nowrap text-gray-300">Sustain (s): <span id="noteSustainValue" class="font-bold text-gray-400">0.05</span></label> <input type="range" id="noteSustain" min="0.01" max="0.5" value="0.05" step="0.01" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"> </div>
+                     <hr class="border-gray-600 my-2"> <div class="flex items-center space-x-2"> <label for="soundType1" class="text-xs text-gray-300 flex-shrink-0 w-10">Wave 1:</label> <select id="soundType1" class="flex-grow p-1 text-xs border border-gray-600 bg-gray-700 text-gray-100 rounded-md focus:ring-blue-500 focus:border-blue-500"> <option value="sine" selected>Sine</option> <option value="square">Square</option> <option value="sawtooth">Sawtooth</option> <option value="triangle">Triangle</option> </select> </div>
+                     <div class="flex items-center space-x-2"> <label for="soundType2" class="text-xs text-gray-300 flex-shrink-0 w-10">Wave 2:</label> <select id="soundType2" class="flex-grow p-1 text-xs border border-gray-600 bg-gray-700 text-gray-100 rounded-md focus:ring-blue-500 focus:border-blue-500"> <option value="sine">Sine</option> <option value="square" selected>Square</option> <option value="sawtooth">Sawtooth</option> <option value="triangle">Triangle</option> </select> <input type="checkbox" id="soundType2Enabled"> <label for="soundType2Enabled" class="text-xs text-gray-400 sr-only">Enable Wave 2</label> </div>
+                     <div class="flex items-center space-x-2"> <label for="soundType3" class="text-xs text-gray-300 flex-shrink-0 w-10">Wave 3:</label> <select id="soundType3" class="flex-grow p-1 text-xs border border-gray-600 bg-gray-700 text-gray-100 rounded-md focus:ring-blue-500 focus:border-blue-500"> <option value="sine">Sine</option> <option value="square">Square</option> <option value="sawtooth" selected>Sawtooth</option> <option value="triangle">Triangle</option> </select> <input type="checkbox" id="soundType3Enabled"> <label for="soundType3Enabled" class="text-xs text-gray-400 sr-only">Enable Wave 3</label> </div>
+                </div>
+                <div class="p-3 border border-gray-700 rounded-md flex flex-col space-y-2">
+                     <span class="font-medium text-sm text-gray-200">Musical Scale:</span>
+                     <div class="flex items-center space-x-2">
+                         <label for="scaleRoot" class="text-xs text-gray-300 flex-shrink-0 w-12">Root:</label>
+                         <select id="scaleRoot" class="flex-grow p-1 text-xs border border-gray-600 bg-gray-700 text-gray-100 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                             <option value="0">C</option> <option value="1">C#</option> <option value="2">D</option> <option value="3">D#</option> <option value="4">E</option> <option value="5">F</option> <option value="6">F#</option> <option value="7">G</option> <option value="8">G#</option> <option value="9" selected>A</option> <option value="10">A#</option> <option value="11">B</option>
+                         </select>
                      </div>
-                     <hr class="border-gray-600 my-2"> <div class="flex items-center space-x-2">
-                         <label for="soundType1" class="text-xs text-gray-300 flex-shrink-0 w-10">Wave 1:</label>
-                         <select id="soundType1" class="flex-grow p-1 text-xs border border-gray-600 bg-gray-700 text-gray-100 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                             <option value="sine" selected>Sine</option> <option value="square">Square</option> <option value="sawtooth">Sawtooth</option> <option value="triangle">Triangle</option>
-                         </select>
-                    </div>
                      <div class="flex items-center space-x-2">
-                         <label for="soundType2" class="text-xs text-gray-300 flex-shrink-0 w-10">Wave 2:</label>
-                         <select id="soundType2" class="flex-grow p-1 text-xs border border-gray-600 bg-gray-700 text-gray-100 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                             <option value="sine">Sine</option> <option value="square" selected>Square</option> <option value="sawtooth">Sawtooth</option> <option value="triangle">Triangle</option>
+                         <label for="scaleType" class="text-xs text-gray-300 flex-shrink-0 w-12">Type:</label>
+                         <select id="scaleType" class="flex-grow p-1 text-xs border border-gray-600 bg-gray-700 text-gray-100 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                             <option value="major" selected>Major</option> <option value="minor">Minor (Natural)</option> <option value="harmonicMinor">Harmonic Minor</option> <option value="melodicMinor">Melodic Minor</option> <option value="pentatonicMajor">Pentatonic Major</option> <option value="pentatonicMinor">Pentatonic Minor</option> <option value="blues">Blues</option> <option value="chromatic">Chromatic</option> <option value="wholeTone">Whole Tone</option>
                          </select>
-                         <input type="checkbox" id="soundType2Enabled" class="form-checkbox h-4 w-4 text-blue-500 rounded border-gray-500 bg-gray-600 focus:ring-blue-400">
-                         <label for="soundType2Enabled" class="text-xs text-gray-400 sr-only">Enable Wave 2</label> </div>
-                     <div class="flex items-center space-x-2">
-                         <label for="soundType3" class="text-xs text-gray-300 flex-shrink-0 w-10">Wave 3:</label>
-                         <select id="soundType3" class="flex-grow p-1 text-xs border border-gray-600 bg-gray-700 text-gray-100 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                             <option value="sine">Sine</option> <option value="square">Square</option> <option value="sawtooth" selected>Sawtooth</option> <option value="triangle">Triangle</option>
-                         </select>
-                         <input type="checkbox" id="soundType3Enabled" class="form-checkbox h-4 w-4 text-blue-500 rounded border-gray-500 bg-gray-600 focus:ring-blue-400">
-                          <label for="soundType3Enabled" class="text-xs text-gray-400 sr-only">Enable Wave 3</label> </div>
+                     </div>
                 </div>
              </div>
 
              <div class="p-3 border border-gray-700 rounded-md flex flex-col space-y-4">
                  <span class="font-medium text-sm text-gray-200">Audio Effects:</span>
                  <div class="border border-gray-600 rounded-md p-2 space-y-2">
-                     <div class="flex items-center justify-between">
-                         <span class="font-medium text-xs text-gray-300">Echo:</span>
-                         <div class="flex items-center space-x-2">
-                             <input type="checkbox" id="echoEnabled">
-                             <label for="echoEnabled" class="text-xs text-gray-400 sr-only">Enable Echo</label>
-                         </div>
-                     </div>
-                     <div class="flex flex-col space-y-1">
-                         <label for="echoDelay" class="font-medium text-xs whitespace-nowrap text-gray-300">Delay (s): <span id="echoDelayValue" class="font-bold text-teal-400">0.30</span></label>
-                         <input type="range" id="echoDelay" min="0.01" max="1.0" value="0.3" step="0.01" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
-                     </div>
-                     <div class="flex flex-col space-y-1">
-                         <label for="echoFeedback" class="font-medium text-xs whitespace-nowrap text-gray-300">Feedback: <span id="echoFeedbackValue" class="font-bold text-teal-400">0.40</span></label>
-                         <input type="range" id="echoFeedback" min="0" max="0.85" value="0.4" step="0.01" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
-                     </div>
+                     <div class="flex items-center justify-between"> <span class="font-medium text-xs text-gray-300">Echo:</span> <div class="flex items-center space-x-2"> <input type="checkbox" id="echoEnabled"> <label for="echoEnabled" class="text-xs text-gray-400 sr-only">Enable Echo</label> </div> </div>
+                     <div class="flex flex-col space-y-1"> <label for="echoDelay" class="font-medium text-xs whitespace-nowrap text-gray-300">Delay (s): <span id="echoDelayValue" class="font-bold text-teal-400">0.30</span></label> <input type="range" id="echoDelay" min="0.01" max="1.0" value="0.3" step="0.01" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"> </div>
+                     <div class="flex flex-col space-y-1"> <label for="echoFeedback" class="font-medium text-xs whitespace-nowrap text-gray-300">Feedback: <span id="echoFeedbackValue" class="font-bold text-teal-400">0.40</span></label> <input type="range" id="echoFeedback" min="0" max="0.85" value="0.4" step="0.01" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"> </div>
                  </div>
                  <div class="border border-gray-600 rounded-md p-2 space-y-2">
-                     <div class="flex items-center justify-between">
-                         <span class="font-medium text-xs text-gray-300">Low-Pass Filter:</span>
-                         <div class="flex items-center space-x-2">
-                             <input type="checkbox" id="filterEnabled">
-                             <label for="filterEnabled" class="text-xs text-gray-400 sr-only">Enable Filter</label>
-                         </div>
-                     </div>
-                     <div class="flex flex-col space-y-1">
-                         <label for="filterFreq" class="font-medium text-xs whitespace-nowrap text-gray-300">Frequency (Hz): <span id="filterFreqValue" class="font-bold text-purple-400">20000</span></label>
-                         <input type="range" id="filterFreq" min="20" max="20000" value="20000" step="10" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"> </div>
-                     <div class="flex flex-col space-y-1">
-                         <label for="filterQ" class="font-medium text-xs whitespace-nowrap text-gray-300">Q (Resonance): <span id="filterQValue" class="font-bold text-purple-400">1.0</span></label>
-                         <input type="range" id="filterQ" min="0.01" max="20" value="1" step="0.1" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
-                     </div>
+                     <div class="flex items-center justify-between"> <span class="font-medium text-xs text-gray-300">Low-Pass Filter:</span> <div class="flex items-center space-x-2"> <input type="checkbox" id="filterEnabled"> <label for="filterEnabled" class="text-xs text-gray-400 sr-only">Enable Filter</label> </div> </div>
+                     <div class="flex flex-col space-y-1"> <label for="filterFreq" class="font-medium text-xs whitespace-nowrap text-gray-300">Frequency (Hz): <span id="filterFreqValue" class="font-bold text-purple-400">20000</span></label> <input type="range" id="filterFreq" min="20" max="20000" value="20000" step="10" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"> </div>
+                     <div class="flex flex-col space-y-1"> <label for="filterQ" class="font-medium text-xs whitespace-nowrap text-gray-300">Q (Resonance): <span id="filterQValue" class="font-bold text-purple-400">1.0</span></label> <input type="range" id="filterQ" min="0.01" max="20" value="1" step="0.1" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"> </div>
                  </div>
              </div>
         </div>
@@ -318,17 +137,20 @@
 
         <div id="rhythm-controls-container" class="w-full space-y-2 mt-2">
             </div>
+
+        <div class="w-full mt-4 pt-4 border-t border-gray-700 flex flex-col items-center space-y-3">
+             <h2 class="text-lg font-medium text-gray-200">Share Settings</h2>
+             <div class="w-full max-w-xl flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                 <input type="text" id="shareStringInput" placeholder="Paste settings string here..." class="flex-grow p-2 text-xs border border-gray-600 bg-gray-700 text-gray-100 rounded-md w-full sm:w-auto">
+                 <button id="loadSettingsButton" class="px-4 py-2 text-xs bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md w-full sm:w-auto flex-shrink-0">Load Settings</button>
+             </div>
+             <button id="generateLinkButton" class="px-4 py-2 text-xs bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-md">Generate & Copy Link</button>
+             <p id="share-feedback" class="text-xs text-green-400 mt-1 min-h-[1.125rem]">&nbsp;</p> </div>
+
     </div>
 
     <footer class="mt-8 text-center text-xs text-gray-500">
-        <p>
-            Author: Timothy Johnstone
-            <a href="https://github.com/tgjohnst" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-gray-200 transition-colors">
-                <svg class="github-icon" viewBox="0 0 16 16" version="1.1" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
-                </svg>
-            </a>
-        </p>
+        <p> Author: Timothy Johnstone <a href="https://github.com/tgjohnst" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-gray-200 transition-colors"> <svg class="github-icon" viewBox="0 0 16 16" version="1.1" aria-hidden="true"> <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path> </svg> </a> </p>
         <p id="copyright-notice" class="mt-1">&copy; 2024 Polyrhythm Generator</p>
     </footer>
 
@@ -339,12 +161,18 @@
             const MAX_RHYTHMS = 32;
             const scheduleAheadTime = 0.1;
             const schedulerFrequency = 25;
-            // const noteDuration = 0.05; // Replaced by noteSustainTime
             const WAVEFORM_2_DELAY = 0.008;
             const WAVEFORM_3_DELAY = 0.016;
             const NORMAL_DOT_RADIUS = 8;
             const FLASH_DOT_RADIUS = 12;
-            const ADJUSTMENT_MUTE_DURATION = 200; // ms
+            const ADJUSTMENT_MUTE_DURATION = 200;
+            const NUM_OCTAVES_IN_SCALE = 5; // Increased octaves
+
+            // --- Musical Scale Data ---
+            const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+            const A4_FREQ = 440.0;
+            const A4_MIDI_NOTE = 69;
+            const SCALE_INTERVALS = { /* ... (no changes) ... */ major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10], harmonicMinor: [0, 2, 3, 5, 7, 8, 11], melodicMinor: [0, 2, 3, 5, 7, 9, 11], pentatonicMajor: [0, 2, 4, 7, 9], pentatonicMinor: [0, 3, 5, 7, 10], blues: [0, 3, 5, 6, 7, 10], chromatic: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], wholeTone: [0, 2, 4, 6, 8, 10], };
 
             // --- Color Theme Generation ---
             function generateHslColors(count, saturation = 70, lightness = 60) { /* ... (no changes) ... */ const colors = []; for (let i = 0; i < count; i++) { const hue = Math.round((i * (360 / count))) % 360; const hex = `hsl(${hue}, ${saturation}%, ${lightness}%)`; const baseHue = Math.round(hue / 30) * 30; let colorName = 'gray'; if (baseHue === 0 || baseHue === 360) colorName = 'red'; else if (baseHue === 30) colorName = 'orange'; else if (baseHue === 60) colorName = 'yellow'; else if (baseHue === 90 || baseHue === 120) colorName = 'lime'; else if (baseHue === 150) colorName = 'emerald'; else if (baseHue === 180) colorName = 'cyan'; else if (baseHue === 210) colorName = 'sky'; else if (baseHue === 240) colorName = 'indigo'; else if (baseHue === 270) colorName = 'purple'; else if (baseHue === 300) colorName = 'fuchsia'; else if (baseHue === 330) colorName = 'pink'; colors.push({ name: `hsl-${i}`, hex: hex, bg: `bg-${colorName}-900`, border: `border-${colorName}-500`, text: `text-${colorName}-400`, slider: `bg-${colorName}-700` }); } return colors; }
@@ -386,6 +214,9 @@
             let noteSustainTime = 0.05;
             let cycleDuration = 60.0 / tempo; let rhythmParams = [];
             let trailsEnabled = true; let trailOpacity = 0.3; let trailWidth = 1.0; let trailDashArray = "3 2";
+            let scaleRootNote = 9; // Default A
+            let scaleType = 'major'; // Default scale
+            let currentScaleNotes = []; // Array to hold { freq, name, midi }
 
 
             // --- D3 Visualization Setup ---
@@ -425,19 +256,68 @@
             const fullscreenButton = document.getElementById('fullscreen-button');
             const fullscreenEnterIcon = document.getElementById('fullscreen-enter-icon');
             const fullscreenExitIcon = document.getElementById('fullscreen-exit-icon');
+            const scaleRootSelect = document.getElementById('scaleRoot');
+            const scaleTypeSelect = document.getElementById('scaleType');
+            const generateLinkButton = document.getElementById('generateLinkButton');
+            const shareStringInput = document.getElementById('shareStringInput');
+            const loadSettingsButton = document.getElementById('loadSettingsButton');
+            const shareFeedback = document.getElementById('share-feedback');
 
 
             // --- Helper Functions ---
             function getRhythmColor(index) { /* ... (no changes) ... */ const currentPalette = THEMES[currentThemeName] || THEMES.rainbow; return currentPalette[index % currentPalette.length]; }
             function calculateRadius(index, total) { /* ... (no changes) ... */ const maxRadiusReduction = 0.95; const radiusStep = total > 1 ? (baseRadius * maxRadiusReduction) / (total - 1) : 0; return Math.max(baseRadius * 0.03, baseRadius - (index * radiusStep)); }
 
+            // --- Musical Scale Functions ---
+            function midiNoteToFrequency(midiNote) { /* ... (no changes) ... */ return A4_FREQ * Math.pow(2, (midiNote - A4_MIDI_NOTE) / 12); }
+            function getNoteName(midiNote) { /* ... (no changes) ... */ const noteIndex = midiNote % 12; const octave = Math.floor(midiNote / 12) - 1; return NOTE_NAMES[noteIndex] + octave; }
+            function generateScaleFrequencies(rootMidiNote, scaleIntervals) { /* ... (no changes - uses NUM_OCTAVES_IN_SCALE) ... */ const frequencies = []; const baseOctave = 4; const rootNoteOffset = rootMidiNote % 12; for (let octave = baseOctave - Math.floor(NUM_OCTAVES_IN_SCALE / 2); octave < baseOctave + Math.ceil(NUM_OCTAVES_IN_SCALE / 2); octave++) { scaleIntervals.forEach(interval => { const midiNote = (octave * 12) + rootNoteOffset + interval; frequencies.push({ freq: midiNoteToFrequency(midiNote), name: getNoteName(midiNote), midi: midiNote }); }); } frequencies.sort((a, b) => a.freq - b.freq); return frequencies; }
+            function updateCurrentScale() { /* ... (no changes) ... */ const rootMidiNote = parseInt(scaleRootSelect.value) + A4_MIDI_NOTE - 9; const intervals = SCALE_INTERVALS[scaleTypeSelect.value] || SCALE_INTERVALS.major; currentScaleNotes = generateScaleFrequencies(rootMidiNote, intervals); console.log(`Scale updated: Root ${NOTE_NAMES[scaleRootSelect.value]}, Type ${scaleTypeSelect.value}, ${currentScaleNotes.length} notes generated.`); }
+
             // --- Core Logic Functions ---
 
-            function initOrUpdateRhythmParams(index) { /* ... (no changes) ... */ const beatsSlider = document.getElementById(`rhythmBeats_${index}`); const freqSlider = document.getElementById(`freqSlider_${index}`); if (!rhythmParams[index]) { rhythmParams[index] = {}; } const defaultBeats = index + 2; const defaultFreq = 200 + index * (1800 / MAX_RHYTHMS); rhythmParams[index].beats = beatsSlider ? parseInt(beatsSlider.value) : defaultBeats; rhythmParams[index].freq = freqSlider ? parseFloat(freqSlider.value) : defaultFreq; cycleDuration = 60.0 / tempo; rhythmParams[index].interval = rhythmParams[index].beats > 0 ? cycleDuration / rhythmParams[index].beats : Infinity; rhythmParams[index].nextNoteTime = audioContext ? audioContext.currentTime : 0; rhythmParams[index].color = getRhythmColor(index); const beatsValueSpan = document.getElementById(`rhythmValue_${index}`); const freqValueSpan = document.getElementById(`freqValue_${index}`); if (beatsValueSpan) beatsValueSpan.textContent = rhythmParams[index].beats; if (freqValueSpan) freqValueSpan.textContent = rhythmParams[index].freq.toFixed(0); rhythmParams[index].radius = calculateRadius(index, numActiveRhythms); }
+            // *** MODIFIED: initOrUpdateRhythmParams for descending default note index ***
+            function initOrUpdateRhythmParams(index) {
+                const beatsSlider = document.getElementById(`rhythmBeats_${index}`);
+                const noteIndexSlider = document.getElementById(`noteIndexSlider_${index}`); // Changed ID
+                if (!rhythmParams[index]) { rhythmParams[index] = {}; }
 
-            function updateRhythmStyles() { /* ... (no changes) ... */ for (let i = 0; i < numActiveRhythms; i++) { const param = rhythmParams[i]; if (!param) continue; param.color = getRhythmColor(i); if (param.path) { param.path .style("stroke", param.color.hex) .style("opacity", trailsEnabled ? trailOpacity : 0) .style("stroke-width", `${trailWidth}px`) .style("stroke-dasharray", trailDashArray === "none" ? null : trailDashArray); } if (param.dot) { param.dot.attr("fill", param.color.hex); } const controlDiv = document.getElementById(`rhythmControls_${i}`); const beatsLabel = controlDiv?.querySelector(`label[for="rhythmBeats_${i}"]`); const beatsValueSpan = document.getElementById(`rhythmValue_${i}`); const beatsSlider = document.getElementById(`rhythmBeats_${i}`); const freqLabel = controlDiv?.querySelector(`label[for="freqSlider_${i}"]`); const freqValueSpan = document.getElementById(`freqValue_${i}`); const freqSlider = document.getElementById(`freqSlider_${i}`); const removeColorClasses = (element, prefix) => { if (!element) return; const classesToRemove = []; element.classList.forEach(cls => { if (cls.startsWith(prefix)) { classesToRemove.push(cls); } }); element.classList.remove(...classesToRemove); }; if (controlDiv) { removeColorClasses(controlDiv, 'border-'); controlDiv.classList.add(param.color.border || 'border-gray-500'); } if (beatsLabel) { removeColorClasses(beatsLabel, 'text-'); beatsLabel.classList.add(param.color.text || 'text-gray-300'); } if (beatsValueSpan) { beatsValueSpan.textContent = param.beats; } if (beatsSlider) { removeColorClasses(beatsSlider, 'bg-'); beatsSlider.classList.add(param.color.slider || 'bg-gray-600', 'bg-opacity-50'); } if (freqLabel) { removeColorClasses(freqLabel, 'text-'); freqLabel.classList.add(param.color.text || 'text-gray-300'); } if (freqValueSpan) { freqValueSpan.textContent = param.freq.toFixed(0); } if (freqSlider) { removeColorClasses(freqSlider, 'bg-'); freqSlider.classList.add(param.color.slider || 'bg-gray-600', 'bg-opacity-50'); } } }
+                const defaultBeats = index + 2;
+                // *** Default note index starts high and descends ***
+                const defaultNoteIndex = Math.max(0, currentScaleNotes.length - 1 - index);
+
+                rhythmParams[index].beats = beatsSlider ? parseInt(beatsSlider.value) : defaultBeats;
+
+                // Get the selected note index from the slider, or use calculated default
+                const selectedNoteIndex = noteIndexSlider ? parseInt(noteIndexSlider.value) : defaultNoteIndex;
+                // Ensure index is within bounds of the current scale
+                const safeNoteIndex = Math.max(0, Math.min(selectedNoteIndex, currentScaleNotes.length - 1));
+                rhythmParams[index].noteIndex = safeNoteIndex; // Store the index
+
+                // Get the actual note data from the scale array
+                const targetNote = currentScaleNotes[safeNoteIndex] || { freq: 440, name: "A4", midi: 69 }; // Fallback
+                rhythmParams[index].freq = targetNote.freq; // Actual frequency to play
+                rhythmParams[index].noteName = targetNote.name; // Note name for display
+
+                cycleDuration = 60.0 / tempo;
+                rhythmParams[index].interval = rhythmParams[index].beats > 0 ? cycleDuration / rhythmParams[index].beats : Infinity;
+                rhythmParams[index].nextNoteTime = audioContext ? audioContext.currentTime : 0;
+                rhythmParams[index].color = getRhythmColor(index);
+
+                const beatsValueSpan = document.getElementById(`rhythmValue_${index}`);
+                const noteValueSpan = document.getElementById(`noteValue_${index}`); // Changed ID
+                if (beatsValueSpan) beatsValueSpan.textContent = rhythmParams[index].beats;
+                if (noteValueSpan) noteValueSpan.textContent = rhythmParams[index].noteName; // Display note name
+
+                rhythmParams[index].radius = calculateRadius(index, numActiveRhythms);
+
+                 // Note slider max update is now handled in updateAllParameters
+            }
+
+            function updateRhythmStyles() { /* ... (no changes) ... */ for (let i = 0; i < numActiveRhythms; i++) { const param = rhythmParams[i]; if (!param) continue; param.color = getRhythmColor(i); if (param.path) { param.path .style("stroke", param.color.hex) .style("opacity", trailsEnabled ? trailOpacity : 0) .style("stroke-width", `${trailWidth}px`) .style("stroke-dasharray", trailDashArray === "none" ? null : trailDashArray); } if (param.dot) { param.dot.attr("fill", param.color.hex); } const controlDiv = document.getElementById(`rhythmControls_${i}`); const beatsLabel = controlDiv?.querySelector(`label[for="rhythmBeats_${i}"]`); const beatsValueSpan = document.getElementById(`rhythmValue_${i}`); const beatsSlider = document.getElementById(`rhythmBeats_${i}`); const noteLabel = controlDiv?.querySelector(`label[for="noteIndexSlider_${i}"]`); const noteValueSpan = document.getElementById(`noteValue_${i}`); const noteIndexSlider = document.getElementById(`noteIndexSlider_${i}`); const removeColorClasses = (element, prefix) => { if (!element) return; const classesToRemove = []; element.classList.forEach(cls => { if (cls.startsWith(prefix)) { classesToRemove.push(cls); } }); element.classList.remove(...classesToRemove); }; if (controlDiv) { removeColorClasses(controlDiv, 'border-'); controlDiv.classList.add(param.color.border || 'border-gray-500'); } if (beatsLabel) { removeColorClasses(beatsLabel, 'text-'); beatsLabel.classList.add(param.color.text || 'text-gray-300'); } if (beatsValueSpan) { beatsValueSpan.textContent = param.beats; } if (beatsSlider) { removeColorClasses(beatsSlider, 'bg-'); beatsSlider.classList.add(param.color.slider || 'bg-gray-600', 'bg-opacity-50'); } if (noteLabel) { removeColorClasses(noteLabel, 'text-'); noteLabel.classList.add(param.color.text || 'text-gray-300'); } if (noteValueSpan) { noteValueSpan.textContent = param.noteName; } /* Updated */ if (noteIndexSlider) { removeColorClasses(noteIndexSlider, 'bg-'); noteIndexSlider.classList.add(param.color.slider || 'bg-gray-600', 'bg-opacity-50'); } } }
 
 
+            // *** MODIFIED: updateAllParameters to update/clamp note sliders ***
             function updateAllParameters() {
                 clearTimeout(adjustmentMuteTimeoutId);
                 adjustmentMuteTimeoutId = setTimeout(() => { adjustmentMuteTimeoutId = null; }, ADJUSTMENT_MUTE_DURATION);
@@ -460,6 +340,10 @@
                 filterEnabled = filterEnabledCheckbox.checked;
                 filterFrequency = parseFloat(filterFreqSlider.value);
                 filterQ = parseFloat(filterQSlider.value);
+                scaleRootNote = parseInt(scaleRootSelect.value);
+                scaleType = scaleTypeSelect.value;
+
+                updateCurrentScale(); // Update scale notes *before* processing rhythm params
 
                 tempoValueSpan.textContent = tempo.toFixed(2);
                 volumeValueSpan.textContent = volume.toFixed(2);
@@ -481,7 +365,32 @@
                     filterNode.Q.setTargetAtTime(filterQ, audioContext.currentTime, 0.015);
                 }
 
-                for (let i = 0; i < numActiveRhythms; i++) { /* ... (no changes) ... */ if (rhythmParams[i]) { cycleDuration = 60.0 / tempo; rhythmParams[i].interval = rhythmParams[i].beats > 0 ? cycleDuration / rhythmParams[i].beats : Infinity; const freqSlider = document.getElementById(`freqSlider_${i}`); const beatsSlider = document.getElementById(`rhythmBeats_${i}`); if(freqSlider) rhythmParams[i].freq = parseFloat(freqSlider.value); if(beatsSlider) rhythmParams[i].beats = parseInt(beatsSlider.value); } }
+                // Update note slider max values and clamp existing values *after* scale update
+                const maxNoteIndex = Math.max(0, currentScaleNotes.length - 1);
+                for (let i = 0; i < MAX_RHYTHMS; i++) { // Iterate up to max possible rhythms
+                     const noteIndexSlider = document.getElementById(`noteIndexSlider_${i}`);
+                     if (noteIndexSlider) {
+                         noteIndexSlider.max = maxNoteIndex;
+                         // Clamp the current value if it exceeds the new max
+                         if (parseInt(noteIndexSlider.value) > maxNoteIndex) {
+                             noteIndexSlider.value = maxNoteIndex;
+                         }
+                     }
+                 }
+
+
+                // Update rhythm params (intervals, read sliders, recalculate note based on scale)
+                for (let i = 0; i < numActiveRhythms; i++) {
+                    if (rhythmParams[i]) {
+                        const beatsSlider = document.getElementById(`rhythmBeats_${i}`);
+                        const noteIndexSlider = document.getElementById(`noteIndexSlider_${i}`); // Changed ID
+                        if (beatsSlider) rhythmParams[i].beats = parseInt(beatsSlider.value);
+                        // Read the potentially clamped value from the slider
+                        if (noteIndexSlider) rhythmParams[i].noteIndex = parseInt(noteIndexSlider.value);
+
+                        initOrUpdateRhythmParams(i); // Recalculate interval, freq, noteName based on potentially clamped index
+                    }
+                 }
                  updateRhythmStyles(); // Apply theme colors and trail styles
 
                 if (isPlaying && audioContext) {
@@ -504,17 +413,20 @@
                     const controlDiv = document.createElement('div');
                     controlDiv.id = `rhythmControls_${i}`;
                     controlDiv.className = `rhythm-controls w-full flex flex-col sm:flex-row items-center justify-between space-y-1 sm:space-y-0 sm:space-x-3 p-2 border-l-4 ${color.border || 'border-gray-500'} bg-gray-900 bg-opacity-40 rounded-md`;
-                    if (!rhythmParams[i]) { initOrUpdateRhythmParams(i); }
+                    if (!rhythmParams[i]) { initOrUpdateRhythmParams(i); } // Initialize params if new
                     const currentParams = rhythmParams[i];
+                    const maxNoteIndex = Math.max(0, currentScaleNotes.length - 1); // Get current max index
+
+                    // *** MODIFIED: HTML for Note Index Slider ***
                     controlDiv.innerHTML = `
                         <label for="rhythmBeats_${i}" class="font-medium text-xs whitespace-nowrap ${color.text || 'text-gray-300'}">Rhythm ${i + 1} Beats: <span id="rhythmValue_${i}" class="font-bold ${color.text || 'text-gray-100'}">${currentParams.beats}</span></label>
                         <input type="range" id="rhythmBeats_${i}" min="2" max="33" value="${currentParams.beats}" step="1" class="w-full h-2 ${color.slider || 'bg-gray-600'} bg-opacity-50 rounded-lg appearance-none cursor-pointer">
-                        <label for="freqSlider_${i}" class="font-medium text-xs whitespace-nowrap ml-0 sm:ml-2 ${color.text || 'text-gray-300'}">Freq ${i + 1} (Hz): <span id="freqValue_${i}" class="font-bold ${color.text || 'text-gray-100'}">${currentParams.freq.toFixed(0)}</span></label>
-                        <input type="range" id="freqSlider_${i}" min="50" max="4000" value="${currentParams.freq}" step="5" class="w-full h-2 ${color.slider || 'bg-gray-600'} bg-opacity-50 rounded-lg appearance-none cursor-pointer">
+                        <label for="noteIndexSlider_${i}" class="font-medium text-xs whitespace-nowrap ml-0 sm:ml-2 ${color.text || 'text-gray-300'}">Note: <span id="noteValue_${i}" class="font-bold ${color.text || 'text-gray-100'}">${currentParams.noteName}</span></label>
+                        <input type="range" id="noteIndexSlider_${i}" min="0" max="${maxNoteIndex}" value="${currentParams.noteIndex}" step="1" class="w-full h-2 ${color.slider || 'bg-gray-600'} bg-opacity-50 rounded-lg appearance-none cursor-pointer" title="Select note from current scale">
                     `;
                     rhythmControlsContainer.appendChild(controlDiv);
                     document.getElementById(`rhythmBeats_${i}`).addEventListener('input', updateAllParameters);
-                    document.getElementById(`freqSlider_${i}`).addEventListener('input', updateAllParameters);
+                    document.getElementById(`noteIndexSlider_${i}`).addEventListener('input', updateAllParameters); // Changed ID
                 }
 
                 // --- Update Visuals (SVG) ---
@@ -539,7 +451,6 @@
                 const updateDots = vizGroup.selectAll(".beat-dot.dynamic-viz").data(rhythmParams, (d, i) => i);
                 updateDots.exit().remove();
                 updateDots.enter().append("circle").attr("class", "beat-dot dynamic-viz")
-                    // *** REMOVED: filter attribute ***
                     .merge(updateDots)
                     .attr("id", (d, i) => `dot_${i}`)
                     .attr("r", NORMAL_DOT_RADIUS)
@@ -565,7 +476,7 @@
                     const param = rhythmParams[i];
                     if (!param || !param.interval || param.interval === Infinity) continue;
                     while (param.nextNoteTime < currentTime + scheduleAheadTime) {
-                        playNote(param.nextNoteTime, param.freq, masterGain);
+                        playNote(param.nextNoteTime, param.freq, masterGain); // Play the scale-snapped frequency
                         triggerVisualFlash(i, 100);
                         param.nextNoteTime += param.interval;
                     }
@@ -577,63 +488,11 @@
             function triggerVisualFlash(index, durationMs = 100) { /* ... (no changes) ... */ const param = rhythmParams[index]; if (param && param.dot) { param.dot.interrupt(); param.dot.classed("playing", true) .transition("flash-out").duration(durationMs * 0.4).ease(d3.easeQuadOut) .attr("r", FLASH_DOT_RADIUS).style("opacity", 1.0) .transition("flash-in").duration(durationMs * 0.6).ease(d3.easeQuadIn) .attr("r", NORMAL_DOT_RADIUS).style("opacity", null) .on("end", function() { d3.select(this).classed("playing", false); }); } }
 
             // --- Control Logic ---
-            function start() {
-                if (isPlaying) return; if (!initAudioContext()) return;
-                clearTimeout(adjustmentMuteTimeoutId); adjustmentMuteTimeoutId = null;
-
-                isPlaying = true; startStopButton.textContent = 'Stop';
-                startStopButton.classList.remove('bg-green-600', 'hover:bg-green-700', 'focus:ring-green-500');
-                startStopButton.classList.add('bg-red-600', 'hover:bg-red-700', 'focus:ring-red-500');
-                const currentTime = audioContext.currentTime; startTime = currentTime;
-                rhythmParams.slice(0, numActiveRhythms).forEach(param => { if (param) param.nextNoteTime = currentTime; });
-                if (schedulerIntervalId) clearInterval(schedulerIntervalId);
-                scheduleNotes(); schedulerIntervalId = setInterval(scheduleNotes, schedulerFrequency);
-                if (animationFrameId) cancelAnimationFrame(animationFrameId);
-                animationFrameId = requestAnimationFrame(animateVisuals);
-                console.log("Playback started.");
-            }
-            function stop() {
-                if (!isPlaying) return;
-                clearTimeout(adjustmentMuteTimeoutId); adjustmentMuteTimeoutId = null;
-
-                isPlaying = false; startStopButton.textContent = 'Start';
-                startStopButton.classList.remove('bg-red-600', 'hover:bg-red-700', 'focus:ring-red-500');
-                startStopButton.classList.add('bg-green-600', 'hover:bg-green-700', 'focus:ring-green-500');
-                if (schedulerIntervalId) clearInterval(schedulerIntervalId); schedulerIntervalId = null;
-                if (animationFrameId) cancelAnimationFrame(animationFrameId);
-                animateVisuals(); // Reset visuals
-                vizGroup.selectAll(".beat-dot.dynamic-viz").interrupt().attr("r", NORMAL_DOT_RADIUS).style("opacity", null).classed("playing", false);
-                animationFrameId = null; console.log("Playback stopped.");
-            }
+            function start() { /* ... (no changes) ... */ if (isPlaying) return; if (!initAudioContext()) return; clearTimeout(adjustmentMuteTimeoutId); adjustmentMuteTimeoutId = null; isPlaying = true; startStopButton.textContent = 'Stop'; startStopButton.classList.remove('bg-green-600', 'hover:bg-green-700', 'focus:ring-green-500'); startStopButton.classList.add('bg-red-600', 'hover:bg-red-700', 'focus:ring-red-500'); const currentTime = audioContext.currentTime; startTime = currentTime; rhythmParams.slice(0, numActiveRhythms).forEach(param => { if (param) param.nextNoteTime = currentTime; }); if (schedulerIntervalId) clearInterval(schedulerIntervalId); scheduleNotes(); schedulerIntervalId = setInterval(scheduleNotes, schedulerFrequency); if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = requestAnimationFrame(animateVisuals); console.log("Playback started."); }
+            function stop() { /* ... (no changes) ... */ if (!isPlaying) return; clearTimeout(adjustmentMuteTimeoutId); adjustmentMuteTimeoutId = null; isPlaying = false; startStopButton.textContent = 'Start'; startStopButton.classList.remove('bg-red-600', 'hover:bg-red-700', 'focus:ring-red-500'); startStopButton.classList.add('bg-green-600', 'hover:bg-green-700', 'focus:ring-green-500'); if (schedulerIntervalId) clearInterval(schedulerIntervalId); schedulerIntervalId = null; if (animationFrameId) cancelAnimationFrame(animationFrameId); animateVisuals(); vizGroup.selectAll(".beat-dot.dynamic-viz").interrupt().attr("r", NORMAL_DOT_RADIUS).style("opacity", null).classed("playing", false); animationFrameId = null; console.log("Playback stopped."); }
 
             // --- Resize Handling ---
-            function handleResize() {
-                 width = svgElement.clientWidth; height = svgElement.clientHeight;
-                 const isFullscreen = !!document.fullscreenElement;
-                 // *** MODIFIED: Use vizContainer dimensions for consistency ***
-                 const containerWidth = vizContainer.clientWidth;
-                 const containerHeight = vizContainer.clientHeight;
-
-                 baseRadius = Math.min(containerWidth, containerHeight) / 2 * (isFullscreen ? 0.95 : 0.9);
-                 center = { x: containerWidth / 2, y: containerHeight / 2 };
-
-                 // Update vizGroup transform based on container center
-                 vizGroup.attr("transform", `translate(${center.x}, ${center.y})`);
-                 // Update note indicator based on new baseRadius
-                 noteIndicatorLine.attr("x1", 0).attr("y1", 0).attr("x2", baseRadius * 1.02).attr("y2", 0);
-
-                 for (let i = 0; i < numActiveRhythms; i++) {
-                     const param = rhythmParams[i];
-                     if (param) {
-                          param.radius = calculateRadius(i, numActiveRhythms); // Recalculate based on new baseRadius
-                          if (param.path) param.path.attr("r", param.radius);
-                          if (param.dot) param.dot.attr("cx", param.radius);
-                     }
-                 }
-                 if (isPlaying && animationFrameId) { animateVisuals(); }
-                 else { vizGroup.selectAll(".beat-dot.dynamic-viz").attr("transform", "rotate(0)"); }
-             }
-
+            function handleResize() { /* ... (no changes) ... */ width = svgElement.clientWidth; height = svgElement.clientHeight; const isFullscreen = !!document.fullscreenElement; const containerWidth = vizContainer.clientWidth; const containerHeight = vizContainer.clientHeight; baseRadius = Math.min(containerWidth, containerHeight) / 2 * (isFullscreen ? 0.95 : 0.9); center = { x: containerWidth / 2, y: containerHeight / 2 }; vizGroup.attr("transform", `translate(${center.x}, ${center.y})`); noteIndicatorLine.attr("x1", 0).attr("y1", 0).attr("x2", baseRadius * 1.02).attr("y2", 0); for (let i = 0; i < numActiveRhythms; i++) { const param = rhythmParams[i]; if (param) { param.radius = calculateRadius(i, numActiveRhythms); if (param.path) param.path.attr("r", param.radius); if (param.dot) param.dot.attr("cx", param.radius); } } if (isPlaying && animationFrameId) { animateVisuals(); } else { vizGroup.selectAll(".beat-dot.dynamic-viz").attr("transform", "rotate(0)"); } }
 
             // --- Theme Change Handler ---
             function handleThemeChange() { /* ... (no changes) ... */ currentThemeName = colorThemeSelect.value; console.log("Theme changed to:", currentThemeName); updateRhythmStyles(); }
@@ -642,28 +501,17 @@
             function toggleControlsCollapse() { /* ... (no changes) ... */ const isCollapsed = rhythmControlsContainer.classList.toggle('collapsed'); collapseArrow.style.transform = isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'; }
 
             // --- Fullscreen Handler ---
-            function toggleFullscreen() {
-                if (!document.fullscreenElement) {
-                    vizContainer.requestFullscreen().catch(err => {
-                        alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-                    });
-                } else {
-                    if (document.exitFullscreen) {
-                        document.exitFullscreen();
-                    }
-                }
-            }
+            function toggleFullscreen() { /* ... (no changes) ... */ if (!document.fullscreenElement) { vizContainer.requestFullscreen().catch(err => { alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`); }); } else { if (document.exitFullscreen) { document.exitFullscreen(); } } }
+            function handleFullscreenChange() { /* ... (no changes) ... */ const isFullscreen = !!document.fullscreenElement; document.body.classList.toggle('fullscreen-active', isFullscreen); fullscreenEnterIcon.style.display = isFullscreen ? 'none' : 'block'; fullscreenExitIcon.style.display = isFullscreen ? 'block' : 'none'; setTimeout(handleResize, 50); }
 
-            // Update UI based on fullscreen state changes (e.g., user pressing ESC)
-            function handleFullscreenChange() {
-                const isFullscreen = !!document.fullscreenElement;
-                document.body.classList.toggle('fullscreen-active', isFullscreen);
-                fullscreenEnterIcon.style.display = isFullscreen ? 'none' : 'block';
-                fullscreenExitIcon.style.display = isFullscreen ? 'block' : 'none';
-                // Trigger resize after a short delay to ensure dimensions are updated
-                setTimeout(handleResize, 50);
-            }
-
+            // --- State Sharing Functions ---
+            function getCurrentState() { /* ... (no changes) ... */ const state = { version: 2, tempo: tempo, volume: volume, numRhythms: numActiveRhythms, soundType1: soundType1, soundType2: soundType2, soundType3: soundType3, soundType2Enabled: soundType2Enabled, soundType3Enabled: soundType3Enabled, noteSustainTime: noteSustainTime, echoEnabled: echoEnabled, echoDelayTime: echoDelayTime, echoFeedbackAmount: echoFeedbackAmount, filterEnabled: filterEnabled, filterFrequency: filterFrequency, filterQ: filterQ, trailsEnabled: trailsEnabled, trailOpacity: trailOpacity, trailWidth: trailWidth, trailDashArray: trailDashArray, scaleRootNote: scaleRootNote, scaleType: scaleType, theme: currentThemeName, rhythms: rhythmParams.slice(0, numActiveRhythms).map(p => ({ beats: p.beats, noteIndex: p.noteIndex })) }; return state; }
+            function encodeState(stateObj) { /* ... (no changes) ... */ try { const jsonString = JSON.stringify(stateObj); return btoa(jsonString); } catch (error) { console.error("Error encoding state:", error); return null; } }
+            function decodeState(encodedString) { /* ... (no changes) ... */ try { const jsonString = atob(encodedString); return JSON.parse(jsonString); } catch (error) { console.error("Error decoding state:", error); return null; } }
+            function applyState(state) { /* ... (no changes - already handles v2 state) ... */ const isV1 = !state.version || state.version === 1; if (isV1) { console.warn("Loading state from older version (v1). Note mapping might differ."); } else if (state.version !== 2) { console.error("Incompatible state object version:", state.version); showShareFeedback("Error: Incompatible settings format.", true); return false; } try { tempoSlider.value = state.tempo; volumeSlider.value = state.volume; numRhythmsSlider.value = state.numRhythms; soundType1Select.value = state.soundType1; soundType2Select.value = state.soundType2; soundType3Select.value = state.soundType3; soundType2EnabledCheckbox.checked = state.soundType2Enabled; soundType3EnabledCheckbox.checked = state.soundType3Enabled; noteSustainSlider.value = state.noteSustainTime; echoEnabledCheckbox.checked = state.echoEnabled; echoDelaySlider.value = state.echoDelayTime; echoFeedbackSlider.value = state.echoFeedbackAmount; filterEnabledCheckbox.checked = state.filterEnabled; filterFreqSlider.value = state.filterFrequency; filterQSlider.value = state.filterQ; trailsEnabledCheckbox.checked = state.trailsEnabled; trailOpacitySlider.value = state.trailOpacity; trailWidthSlider.value = state.trailWidth; trailDashSelect.value = state.trailDashArray; scaleRootSelect.value = state.scaleRootNote; scaleTypeSelect.value = state.scaleType; colorThemeSelect.value = state.theme; updateRhythmControlsAndVisuals(); for (let i = 0; i < state.numRhythms; i++) { const rhythmState = state.rhythms[i]; const beatsSlider = document.getElementById(`rhythmBeats_${i}`); const noteIndexSlider = document.getElementById(`noteIndexSlider_${i}`); if (rhythmState && beatsSlider && noteIndexSlider) { beatsSlider.value = rhythmState.beats; if (isV1) { updateCurrentScale(); /* Need findClosestNoteInScale if supporting v1 fully */ const approxIndex = Math.floor(Math.random() * currentScaleNotes.length); /* Placeholder for v1 */ noteIndexSlider.value = approxIndex >= 0 ? approxIndex : 0; } else { noteIndexSlider.value = rhythmState.noteIndex; } } } handleThemeChange(); updateAllParameters(); showShareFeedback("Settings loaded successfully!", false); return true; } catch (error) { console.error("Error applying state:", error); showShareFeedback("Error applying settings.", true); return false; } }
+            function showShareFeedback(message, isError = false) { /* ... (no changes) ... */ shareFeedback.textContent = message; shareFeedback.className = `text-xs mt-1 min-h-[1.125rem] ${isError ? 'text-red-400' : 'text-green-400'}`; setTimeout(() => { if (shareFeedback.textContent === message) { shareFeedback.innerHTML = '&nbsp;'; } }, 3000); }
+            function handleGenerateLink() { /* ... (no changes) ... */ const state = getCurrentState(); const encodedState = encodeState(state); if (encodedState) { const url = new URL(window.location.href); url.hash = encodedState; navigator.clipboard.writeText(url.toString()) .then(() => { showShareFeedback("Link copied to clipboard!", false); }) .catch(err => { console.error("Failed to copy link:", err); showShareFeedback("Failed to copy link.", true); }); } else { showShareFeedback("Error generating link.", true); } }
+            function handleLoadSettings() { /* ... (no changes) ... */ const encodedString = shareStringInput.value.trim(); let stateString = ''; if (encodedString.includes('#')) { stateString = encodedString.split('#')[1]; } else { stateString = encodedString; } if (!stateString) { showShareFeedback("Paste settings string first.", true); return; } const decodedState = decodeState(stateString); if (decodedState) { applyState(decodedState); } else { showShareFeedback("Invalid settings string.", true); } }
 
             // --- Event Listeners ---
             startStopButton.addEventListener('click', () => isPlaying ? stop() : start());
@@ -691,6 +539,11 @@
             fullscreenButton.addEventListener('click', toggleFullscreen);
             document.addEventListener('fullscreenchange', handleFullscreenChange);
             document.addEventListener('webkitfullscreenchange', handleFullscreenChange); // Safari
+            scaleRootSelect.addEventListener('change', updateAllParameters);
+            scaleTypeSelect.addEventListener('change', updateAllParameters);
+            generateLinkButton.addEventListener('click', handleGenerateLink);
+            loadSettingsButton.addEventListener('click', handleLoadSettings);
+
 
             let resizeTimeout;
             window.addEventListener('resize', () => { clearTimeout(resizeTimeout); resizeTimeout = setTimeout(handleResize, 100); });
@@ -702,8 +555,30 @@
             echoEnabledCheckbox.checked = echoEnabled;
             trailsEnabledCheckbox.checked = trailsEnabled;
             filterEnabledCheckbox.checked = filterEnabled;
-            updateRhythmControlsAndVisuals(); // Creates controls with correct defaults & initial theme colors
-            updateAllParameters(); // Reads all initial values and applies them
+
+            // *** Start with controls collapsed ***
+            rhythmControlsContainer.classList.add('collapsed');
+            collapseArrow.style.transform = 'rotate(-90deg)';
+
+            // *** Check URL Hash for shared state on load ***
+            if(window.location.hash && window.location.hash.length > 1) {
+                const stateString = window.location.hash.substring(1);
+                const decodedState = decodeState(stateString);
+                if(decodedState) {
+                    console.log("Applying state from URL hash.");
+                    applyState(decodedState); // This now handles creating controls/visuals and applying state
+                } else {
+                    console.warn("Invalid state string in URL hash.");
+                    updateCurrentScale(); // Ensure scale is generated even with invalid hash
+                    updateRhythmControlsAndVisuals(); // Initialize with defaults
+                    updateAllParameters();
+                }
+            } else {
+                // Default initialization if no hash
+                updateCurrentScale(); // Generate initial scale
+                updateRhythmControlsAndVisuals(); // Creates controls with correct defaults & initial theme colors
+                updateAllParameters(); // Reads all initial values and applies them
+            }
 
 
         }); // End DOMContentLoaded
