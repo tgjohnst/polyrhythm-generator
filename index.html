@@ -115,16 +115,15 @@
         #visualization-container:fullscreen { /* Standard */
             width: 100%; height: 100%; max-width: none; margin: 0; padding: 0; background-color: #111827; /* bg-gray-900 */
         }
+        /* *** MODIFIED: Removed max-width/max-height from fullscreen SVG *** */
         #visualization-container:-webkit-full-screen #viz-svg {
              border-radius: 0; /* Square corners in fullscreen */
-             max-width: 100vh; /* Limit width to maintain aspect ratio based on height */
-             max-height: 100vw; /* Limit height based on width */
-             margin: auto; /* Center the SVG */
+             /* Removed max-width/max-height */
+             margin: auto; /* Center the SVG if container is larger */
         }
          #visualization-container:fullscreen #viz-svg {
              border-radius: 0;
-             max-width: 100vh;
-             max-height: 100vw;
+             /* Removed max-width/max-height */
              margin: auto;
         }
 
@@ -139,16 +138,13 @@
             border-radius: 50%;
             cursor: pointer;
             z-index: 100; /* Ensure it's above SVG content */
-            /* *** MODIFIED: Set initial opacity to be visible *** */
             opacity: 0.6; /* Default visibility */
             transition: opacity 0.3s ease-in-out, background-color 0.3s ease-in-out;
         }
-        /* *** MODIFIED: Hover effect increases opacity/changes bg slightly *** */
         #fullscreen-button:hover {
             opacity: 1;
             background-color: rgba(75, 85, 99, 0.8); /* bg-gray-600 slightly more opaque */
         }
-        /* Keep button fully visible when in fullscreen */
         #visualization-container:-webkit-full-screen #fullscreen-button,
         #visualization-container:fullscreen #fullscreen-button {
             opacity: 1;
@@ -614,22 +610,22 @@
             function handleResize() {
                  width = svgElement.clientWidth; height = svgElement.clientHeight;
                  const isFullscreen = !!document.fullscreenElement;
-                 const containerWidth = isFullscreen ? window.innerWidth : width;
-                 const containerHeight = isFullscreen ? window.innerHeight : height;
+                 // *** MODIFIED: Use vizContainer dimensions for consistency ***
+                 const containerWidth = vizContainer.clientWidth;
+                 const containerHeight = vizContainer.clientHeight;
 
                  baseRadius = Math.min(containerWidth, containerHeight) / 2 * (isFullscreen ? 0.95 : 0.9);
                  center = { x: containerWidth / 2, y: containerHeight / 2 };
 
-                 // Adjust SVG size and position if NOT using the :fullscreen CSS approach fully
-                 // svg.attr("width", containerWidth).attr("height", containerHeight);
-
+                 // Update vizGroup transform based on container center
                  vizGroup.attr("transform", `translate(${center.x}, ${center.y})`);
+                 // Update note indicator based on new baseRadius
                  noteIndicatorLine.attr("x1", 0).attr("y1", 0).attr("x2", baseRadius * 1.02).attr("y2", 0);
 
                  for (let i = 0; i < numActiveRhythms; i++) {
                      const param = rhythmParams[i];
                      if (param) {
-                          param.radius = calculateRadius(i, numActiveRhythms);
+                          param.radius = calculateRadius(i, numActiveRhythms); // Recalculate based on new baseRadius
                           if (param.path) param.path.attr("r", param.radius);
                           if (param.dot) param.dot.attr("cx", param.radius);
                      }
@@ -637,6 +633,7 @@
                  if (isPlaying && animationFrameId) { animateVisuals(); }
                  else { vizGroup.selectAll(".beat-dot.dynamic-viz").attr("transform", "rotate(0)"); }
              }
+
 
             // --- Theme Change Handler ---
             function handleThemeChange() { /* ... (no changes) ... */ currentThemeName = colorThemeSelect.value; console.log("Theme changed to:", currentThemeName); updateRhythmStyles(); }
