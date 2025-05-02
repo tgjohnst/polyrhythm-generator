@@ -11,9 +11,11 @@
         body {
             font-family: 'Inter', sans-serif;
         }
+        /* Style for the 'beat' flash effect (applied during flash) */
         .beat-dot.playing {
             transition: r 0.05s ease-out, opacity 0.05s ease-out;
         }
+        /* Container for visualization */
         #visualization {
             display: flex;
             justify-content: center;
@@ -23,21 +25,26 @@
             aspect-ratio: 1 / 1;
             margin: 1rem auto;
         }
+        /* SVG canvas styling */
         #viz-svg {
             width: 100%;
             height: 100%;
-            border-radius: 50%;
+            border-radius: 50%; /* Keep the container visually round */
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
+        /* Style for the circular paths */
         .path-circle {
             fill: none;
-            stroke-width: 2px;
-            stroke-dasharray: 5 3;
+            stroke-width: 1.5px; /* Slightly thinner */
+            stroke-dasharray: 4 2; /* Adjusted dash */
+            opacity: 0.6; /* Make paths less prominent */
         }
+        /* Base style for the moving dots */
         .beat-dot {
-            stroke: #333;
-            stroke-width: 1px;
+            stroke: #111; /* Darker stroke for contrast on glow */
+            stroke-width: 0.5px;
         }
+        /* Focus rings for accessibility */
         input[type="range"]:focus {
             outline: 2px solid transparent;
             outline-offset: 2px;
@@ -68,11 +75,11 @@
         </button>
 
         <div class="w-full flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0 sm:space-x-4 p-3 border border-gray-200 rounded-md">
-            <label for="tempo" class="font-medium text-sm whitespace-nowrap">Tempo (BPM): <span id="tempoValue" class="font-bold text-indigo-600">120</span></label>
-            <input type="range" id="tempo" min="30" max="240" value="120" step="1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
+            <label for="tempo" class="font-medium text-sm whitespace-nowrap">Tempo (BPM): <span id="tempoValue" class="font-bold text-indigo-600">120.0</span></label>
+            <input type="range" id="tempo" min="1" max="240" value="120" step="0.1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
         </div>
         <div class="w-full flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0 sm:space-x-4 p-3 border border-gray-200 rounded-md">
-            <label for="volume" class="font-medium text-sm whitespace-nowrap">Volume: <span id="volumeValue" class="font-bold text-indigo-600">0.5</span></label>
+            <label for="volume" class="font-medium text-sm whitespace-nowrap">Volume: <span id="volumeValue" class="font-bold text-indigo-600">0.50</span></label>
             <input type="range" id="volume" min="0" max="1" value="0.5" step="0.05" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
         </div>
          <div class="w-full flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0 sm:space-x-4 p-3 border border-gray-200 rounded-md">
@@ -85,17 +92,27 @@
     </div>
 
     <div id="visualization">
-        <svg id="viz-svg" class="bg-white rounded-full"></svg>
+        <svg id="viz-svg" class="bg-gray-800 rounded-full">
+             <defs>
+                <filter id="glow">
+                    <feGaussianBlur stdDeviation="3.5" result="coloredBlur"/>
+                     <feComponentTransfer in="coloredBlur" result="brighterBlur">
+                        <feFuncA type="linear" slope="1.5"/> </feComponentTransfer>
+                    <feMerge>
+                        <feMergeNode in="brighterBlur"/> <feMergeNode in="SourceGraphic"/> </feMerge>
+                </filter>
+            </defs>
+        </svg>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- Constants and Colors ---
             const MAX_RHYTHMS = 8;
-            const scheduleAheadTime = 0.1; // (seconds) How far ahead to schedule audio events
-            const schedulerFrequency = 25; // (ms) How often the scheduler function runs
-            const noteDuration = 0.05; // (seconds) Duration of the synthesized sound
-            const RHYTHM_COLORS = [ // Tailwind 500 level colors for good visibility
+            const scheduleAheadTime = 0.1;
+            const schedulerFrequency = 25;
+            const noteDuration = 0.05;
+            const RHYTHM_COLORS = [ // Tailwind 500 level colors
                 { name: 'blue', hex: 'rgb(59 130 246)', bg: 'bg-blue-50', border: 'border-blue-500', text: 'text-blue-700', slider: 'bg-blue-200' },
                 { name: 'red', hex: 'rgb(239 68 68)', bg: 'bg-red-50', border: 'border-red-500', text: 'text-red-700', slider: 'bg-red-200' },
                 { name: 'green', hex: 'rgb(34 197 94)', bg: 'bg-green-50', border: 'border-green-500', text: 'text-green-700', slider: 'bg-green-200' },
@@ -112,22 +129,25 @@
             let isPlaying = false;
             let schedulerIntervalId = null;
             let animationFrameId = null;
-            let startTime = 0; // Reference time for animation cycle start
+            let startTime = 0;
 
             // --- Parameters ---
-            let tempo = 120;
+            let tempo = 120.0; // Keep as float
             let volume = 0.5;
             let numActiveRhythms = 2;
             let cycleDuration = 60.0 / tempo;
-            let rhythmParams = []; // Array to hold parameters for each active rhythm
+            let rhythmParams = [];
 
             // --- D3 Visualization Setup ---
             const svgElement = document.getElementById('viz-svg');
             const svg = d3.select(svgElement);
+            // Select the <defs> section we added in HTML
+            const defs = svg.select('defs');
             let width = svgElement.clientWidth;
             let height = svgElement.clientHeight;
-            let baseRadius = Math.min(width, height) / 2 * 0.9; // Outer radius
+            let baseRadius = Math.min(width, height) / 2 * 0.9;
             let center = { x: width / 2, y: height / 2 };
+            // Make sure vizGroup is created *after* defs
             const vizGroup = svg.append("g")
                 .attr("transform", `translate(${center.x}, ${center.y})`);
 
@@ -147,156 +167,154 @@
             }
 
             function calculateRadius(index, total) {
-                // Decrease radius for inner circles, ensure minimum separation
-                const maxRadiusReduction = 0.8; // How much the innermost circle is smaller than the outermost
+                const maxRadiusReduction = 0.8;
                 const radiusStep = total > 1 ? (baseRadius * maxRadiusReduction) / (total -1) : 0;
-                 //return baseRadius * (1 - (index * 0.12)); // Simple linear decrease
                  return baseRadius - (index * radiusStep);
             }
 
             // --- Core Logic Functions ---
 
-            // Initialize or update parameters for a specific rhythm index
             function initOrUpdateRhythmParams(index) {
                 const beatsSlider = document.getElementById(`rhythmBeats_${index}`);
                 const freqSlider = document.getElementById(`freqSlider_${index}`);
 
                 if (!rhythmParams[index]) {
-                    rhythmParams[index] = {}; // Create object if it doesn't exist
+                    rhythmParams[index] = {};
                 }
 
-                // Assign default values if sliders don't exist yet or params are new
-                rhythmParams[index].beats = beatsSlider ? parseInt(beatsSlider.value) : (index === 0 ? 3 : (index === 1 ? 2 : index + 2)); // Default beats
-                rhythmParams[index].freq = freqSlider ? parseFloat(freqSlider.value) : 440 + index * 110; // Default frequencies
+                rhythmParams[index].beats = beatsSlider ? parseInt(beatsSlider.value) : (index === 0 ? 3 : (index === 1 ? 2 : index + 2));
+                rhythmParams[index].freq = freqSlider ? parseFloat(freqSlider.value) : 440 + index * 110;
+                // Ensure cycleDuration is up-to-date before calculating interval
+                cycleDuration = 60.0 / tempo;
                 rhythmParams[index].interval = cycleDuration / rhythmParams[index].beats;
-                rhythmParams[index].nextNoteTime = audioContext ? audioContext.currentTime : 0; // Reset time on update/creation
+                rhythmParams[index].nextNoteTime = audioContext ? audioContext.currentTime : 0;
                 rhythmParams[index].color = getRhythmColor(index);
 
-                 // Update display spans if they exist
                 const beatsValueSpan = document.getElementById(`rhythmValue_${index}`);
                 const freqValueSpan = document.getElementById(`freqValue_${index}`);
                 if (beatsValueSpan) beatsValueSpan.textContent = rhythmParams[index].beats;
                 if (freqValueSpan) freqValueSpan.textContent = rhythmParams[index].freq;
 
-                 // Update SVG elements (will be created/updated in updateRhythmVisuals)
                 rhythmParams[index].radius = calculateRadius(index, numActiveRhythms);
-                // References to D3 selections will be added in updateRhythmVisuals
             }
 
-
-            // Update all global and rhythm-specific parameters
             function updateAllParameters() {
-                tempo = parseFloat(tempoSlider.value);
+                tempo = parseFloat(tempoSlider.value); // Ensure tempo is float
                 volume = parseFloat(volumeSlider.value);
-                // numActiveRhythms is updated by its slider's event listener
 
-                tempoValueSpan.textContent = tempo;
+                // *** MODIFIED Tempo Display: Show one decimal place ***
+                tempoValueSpan.textContent = tempo.toFixed(1);
                 volumeValueSpan.textContent = volume.toFixed(2);
-                numRhythmsValueSpan.textContent = numActiveRhythms; // Keep this updated
+                numRhythmsValueSpan.textContent = numActiveRhythms;
 
-                cycleDuration = 60.0 / tempo;
+                cycleDuration = 60.0 / tempo; // Recalculate cycle duration
 
-                // Update master gain volume smoothly
                 if (masterGain && audioContext) {
                     masterGain.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.05);
                 }
 
-                // Update parameters for all currently active rhythms
+                // Update parameters for all currently active rhythms (important after tempo change)
                 for (let i = 0; i < numActiveRhythms; i++) {
-                    initOrUpdateRhythmParams(i); // This recalculates intervals etc.
+                    initOrUpdateRhythmParams(i);
                 }
 
-                // If playing, reset scheduler timing for all rhythms
                 if (isPlaying && audioContext) {
                     const currentTime = audioContext.currentTime;
-                    rhythmParams.forEach(param => {
-                        param.nextNoteTime = currentTime;
+                    rhythmParams.slice(0, numActiveRhythms).forEach(param => {
+                         if(param) param.nextNoteTime = currentTime;
                     });
-                    startTime = currentTime; // Reset animation start time
+                    startTime = currentTime;
                     console.log("Global parameters updated, resetting scheduler timing.");
                 }
-                 handleResize(); // Update visualization radii based on new number/params
+                 handleResize(); // Update visualization radii
             }
 
-             // Create or remove rhythm control sections in HTML
             function updateRhythmControlsAndVisuals() {
                 const newNumRhythms = parseInt(numRhythmsSlider.value);
-                numRhythmsValueSpan.textContent = newNumRhythms; // Update display immediately
+                numRhythmsValueSpan.textContent = newNumRhythms;
 
                 // --- Update Controls ---
-                // Remove excess controls
                 while (rhythmControlsContainer.children.length > newNumRhythms) {
                     rhythmControlsContainer.removeChild(rhythmControlsContainer.lastChild);
                 }
 
-                // Add new controls
                 for (let i = rhythmControlsContainer.children.length; i < newNumRhythms; i++) {
                     const color = getRhythmColor(i);
                     const controlDiv = document.createElement('div');
                     controlDiv.id = `rhythmControls_${i}`;
-                    // Apply Tailwind classes for layout and color-coding
                     controlDiv.className = `rhythm-controls w-full flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0 sm:space-x-4 p-3 border-l-4 ${color.border} ${color.bg} rounded-md`;
 
+                    // Initialize rhythmParams object if it doesn't exist for this index yet
+                    if (!rhythmParams[i]) {
+                         initOrUpdateRhythmParams(i); // Use defaults defined in this function
+                    }
+                    const currentParams = rhythmParams[i]; // Get potentially pre-existing or default params
+
                     controlDiv.innerHTML = `
-                        <label for="rhythmBeats_${i}" class="font-medium text-sm whitespace-nowrap">Rhythm ${i + 1} Beats: <span id="rhythmValue_${i}" class="font-bold ${color.text}"></span></label>
-                        <input type="range" id="rhythmBeats_${i}" min="1" max="16" value="${i === 0 ? 3 : (i === 1 ? 2 : i + 2)}" step="1" class="w-full h-2 ${color.slider} rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
-                        <label for="freqSlider_${i}" class="font-medium text-sm whitespace-nowrap ml-0 sm:ml-4">Freq ${i + 1} (Hz): <span id="freqValue_${i}" class="font-bold ${color.text}"></span></label>
-                        <input type="range" id="freqSlider_${i}" min="100" max="1500" value="${440 + i * 110}" step="10" class="w-full h-2 ${color.slider} rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
+                        <label for="rhythmBeats_${i}" class="font-medium text-sm whitespace-nowrap">Rhythm ${i + 1} Beats: <span id="rhythmValue_${i}" class="font-bold ${color.text}">${currentParams.beats}</span></label>
+                        <input type="range" id="rhythmBeats_${i}" min="1" max="16" value="${currentParams.beats}" step="1" class="w-full h-2 ${color.slider} rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
+                        <label for="freqSlider_${i}" class="font-medium text-sm whitespace-nowrap ml-0 sm:ml-4">Freq ${i + 1} (Hz): <span id="freqValue_${i}" class="font-bold ${color.text}">${currentParams.freq}</span></label>
+                        <input type="range" id="freqSlider_${i}" min="100" max="1500" value="${currentParams.freq}" step="10" class="w-full h-2 ${color.slider} rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
                     `;
                     rhythmControlsContainer.appendChild(controlDiv);
 
-                    // Add event listeners for the new sliders
                     document.getElementById(`rhythmBeats_${i}`).addEventListener('input', updateAllParameters);
                     document.getElementById(`freqSlider_${i}`).addEventListener('input', updateAllParameters);
                 }
 
                  // --- Update Visuals (SVG) ---
-                 // Remove excess SVG elements (dots and paths)
-                 vizGroup.selectAll(".dynamic-viz").filter(d => d.index >= newNumRhythms).remove();
-
-                 // Add new SVG elements
-                 for (let i = 0; i < newNumRhythms; i++) {
-                     if (!rhythmParams[i] || !rhythmParams[i].path) { // Only add if not already existing visually
-                         const color = getRhythmColor(i);
-                         const radius = calculateRadius(i, newNumRhythms);
-
-                         // Add path circle
-                         const path = vizGroup.append("circle")
-                             .datum({ index: i }) // Bind index data
-                             .attr("class", "path-circle dynamic-viz")
-                             .attr("id", `path_${i}`)
-                             .attr("r", radius)
-                             .style("stroke", color.hex);
-
-                         // Add beat dot
-                         const dot = vizGroup.append("circle")
-                             .datum({ index: i }) // Bind index data
-                             .attr("class", "beat-dot dynamic-viz")
-                             .attr("id", `dot_${i}`)
-                             .attr("r", 8)
-                             .attr("fill", `${color.hex}B3`) // Add alpha transparency (approx 0.7)
-                             .attr("cx", radius)
-                             .attr("cy", 0);
-
-                         // Store references in params (if params exist)
-                         if(rhythmParams[i]) {
-                            rhythmParams[i].path = path;
-                            rhythmParams[i].dot = dot;
-                            rhythmParams[i].radius = radius; // Ensure radius is stored
-                         }
-                     }
+                 // Ensure rhythmParams array is sized correctly, adding defaults if needed
+                 while(rhythmParams.length < newNumRhythms) {
+                     initOrUpdateRhythmParams(rhythmParams.length);
                  }
+                 // Trim excess params data if reducing rhythms
+                 rhythmParams.length = newNumRhythms;
 
-                // Update the official count *after* adding/removing elements
+                 // Use D3's data binding for cleaner add/remove of SVG elements
+                 const updatePaths = vizGroup.selectAll(".path-circle.dynamic-viz")
+                     .data(rhythmParams, d => d.color.name); // Use color name as key
+
+                 updatePaths.exit().remove(); // Remove old paths
+
+                 updatePaths.enter() // Add new paths
+                     .append("circle")
+                     .attr("class", "path-circle dynamic-viz")
+                     .attr("id", d => `path_${rhythmParams.indexOf(d)}`)
+                     .style("stroke", d => d.color.hex)
+                     .merge(updatePaths) // Merge enter and update selections
+                     .each(function(d) { d.path = d3.select(this); }) // Store reference
+                     .attr("r", d => d.radius); // Update radius for all
+
+                 const updateDots = vizGroup.selectAll(".beat-dot.dynamic-viz")
+                     .data(rhythmParams, d => d.color.name); // Use color name as key
+
+                 updateDots.exit().remove(); // Remove old dots
+
+                 updateDots.enter() // Add new dots
+                     .append("circle")
+                     .attr("class", "beat-dot dynamic-viz")
+                     .attr("id", d => `dot_${rhythmParams.indexOf(d)}`)
+                     .attr("r", 8)
+                     .attr("fill", d => `${d.color.hex}CC`) // Slightly more opaque fill (CC = 80%)
+                     // *** MODIFIED: Apply the glow filter ***
+                     .attr("filter", "url(#glow)")
+                     .merge(updateDots) // Merge enter and update selections
+                     .each(function(d) { d.dot = d3.select(this); }) // Store reference
+                     .attr("cx", d => d.radius) // Update position for all
+                     .attr("cy", 0);
+
+
+                // Update the official count *after* managing elements and params
                 numActiveRhythms = newNumRhythms;
 
-                // Update parameters for the potentially changed number of rhythms
-                updateAllParameters(); // This ensures params array matches controls and visuals
+                // Update parameters and resize (important after changing num rhythms)
+                updateAllParameters();
             }
 
 
             // --- Audio Functions ---
             function initAudioContext() {
+                // ... (no changes needed here)
                 if (!audioContext) {
                     try {
                         audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -317,6 +335,7 @@
             }
 
             function playNote(time, frequency, gainNode) {
+                // ... (no changes needed here)
                 if (!audioContext) return;
                 const oscillator = audioContext.createOscillator();
                 oscillator.type = 'sine';
@@ -332,36 +351,38 @@
 
             // --- Scheduler ---
             function scheduleNotes() {
+                // ... (no changes needed here)
                 if (!isPlaying || !audioContext) return;
                 const currentTime = audioContext.currentTime;
 
                 for (let i = 0; i < numActiveRhythms; i++) {
                     const param = rhythmParams[i];
-                    if (!param) continue; // Skip if params somehow don't exist
+                    if (!param || !param.interval) continue; // Skip if params/interval not ready
 
                     while (param.nextNoteTime < currentTime + scheduleAheadTime) {
                         playNote(param.nextNoteTime, param.freq, masterGain);
-                        triggerVisualFlash(i, 50); // Flash the corresponding dot
-                        param.nextNoteTime += param.interval; // Advance time for this rhythm
+                        triggerVisualFlash(i, 50);
+                        param.nextNoteTime += param.interval;
                     }
                 }
             }
 
             // --- Visualisation Update ---
             function animateVisuals() {
+                // ... (no changes needed here)
                 if (!isPlaying || !audioContext) {
-                    // Reset all dots if stopped
                     vizGroup.selectAll(".beat-dot.dynamic-viz").attr("transform", "rotate(0)");
                     animationFrameId = null;
                     return;
                 }
 
                 const elapsed = audioContext.currentTime - startTime;
-                const cyclePhase = (elapsed % cycleDuration) / cycleDuration; // Phase 0-1
+                // Use cycleDuration safely, ensure it's not zero
+                const cyclePhase = cycleDuration > 0 ? (elapsed % cycleDuration) / cycleDuration : 0;
 
                 for (let i = 0; i < numActiveRhythms; i++) {
                     const param = rhythmParams[i];
-                    if (param && param.dot) { // Check if dot exists
+                    if (param && param.dot && param.beats) { // Check dot and beats exist
                         const angle = cyclePhase * 360 * param.beats;
                         param.dot.attr("transform", `rotate(${angle})`);
                     }
@@ -371,23 +392,25 @@
             }
 
             function triggerVisualFlash(index, durationMs = 100) {
+                 // ... (no changes needed here)
                  const param = rhythmParams[index];
                  if (param && param.dot) {
                     param.dot.classed("playing", true)
                        .transition()
                        .duration(durationMs * 0.4)
                        .attr("r", 12) // Flash size
-                       .style("opacity", 1.0)
+                       .style("opacity", 1.0) // Make fully opaque during flash
                        .transition()
                        .duration(durationMs * 0.6)
                        .attr("r", 8) // Back to normal size
-                       .style("opacity", null)
+                       .style("opacity", null) // Back to default opacity
                        .on("end", () => param.dot.classed("playing", false));
                  }
             }
 
             // --- Control Logic ---
             function start() {
+                // ... (no changes needed here)
                 if (isPlaying) return;
                 if (!initAudioContext()) return;
 
@@ -398,14 +421,13 @@
 
                 const currentTime = audioContext.currentTime;
                 startTime = currentTime;
-                // Reset next note times for all active rhythms
                 rhythmParams.slice(0, numActiveRhythms).forEach(param => {
-                    param.nextNoteTime = currentTime;
+                    if(param) param.nextNoteTime = currentTime;
                 });
 
 
                 if (schedulerIntervalId) clearInterval(schedulerIntervalId);
-                scheduleNotes(); // Schedule first batch
+                scheduleNotes();
                 schedulerIntervalId = setInterval(scheduleNotes, schedulerFrequency);
 
                 if (animationFrameId) cancelAnimationFrame(animationFrameId);
@@ -415,6 +437,7 @@
             }
 
             function stop() {
+                // ... (no changes needed here)
                 if (!isPlaying) return;
                 isPlaying = false;
                 startStopButton.textContent = 'Start';
@@ -425,19 +448,18 @@
                 schedulerIntervalId = null;
 
                 if (animationFrameId) cancelAnimationFrame(animationFrameId);
-                 // Explicitly call animateVisuals one last time with isPlaying=false to reset dots
-                animateVisuals();
+                animateVisuals(); // Call once more to reset dots
                 animationFrameId = null;
-
 
                 console.log("Playback stopped.");
             }
 
             // --- Resize Handling ---
             function handleResize() {
+                // ... (minor adjustments for clarity)
                 width = svgElement.clientWidth;
                 height = svgElement.clientHeight;
-                baseRadius = Math.min(width, height) / 2 * 0.9; // Recalculate base radius
+                baseRadius = Math.min(width, height) / 2 * 0.9;
                 center = { x: width / 2, y: height / 2 };
 
                 vizGroup.attr("transform", `translate(${center.x}, ${center.y})`);
@@ -447,14 +469,17 @@
                     const param = rhythmParams[i];
                     if (param) {
                          param.radius = calculateRadius(i, numActiveRhythms);
+                         // Update SVG elements if they exist
                          if(param.path) param.path.attr("r", param.radius);
-                         if(param.dot) param.dot.attr("cx", param.radius); // Update initial position
+                         if(param.dot) param.dot.attr("cx", param.radius);
                     }
                 }
 
-                 // Re-apply current rotation if playing (needed after cx change)
-                if (isPlaying && audioContext) {
-                    animateVisuals(); // Trigger immediate redraw with new positions/rotations
+                // Re-apply current rotation if playing
+                if (isPlaying && animationFrameId) {
+                     // No need to call animateVisuals directly,
+                     // the next frame will pick up the new cx/cy implicitly.
+                     // If immediate update is desired, call animateVisuals().
                 } else {
                      // Ensure dots are reset if not playing
                      vizGroup.selectAll(".beat-dot.dynamic-viz").attr("transform", "rotate(0)");
@@ -465,10 +490,8 @@
             startStopButton.addEventListener('click', () => isPlaying ? stop() : start());
             tempoSlider.addEventListener('input', updateAllParameters);
             volumeSlider.addEventListener('input', updateAllParameters);
-            // Listener for the number of rhythms slider
-            numRhythmsSlider.addEventListener('input', updateRhythmControlsAndVisuals); // Use the dedicated function
+            numRhythmsSlider.addEventListener('input', updateRhythmControlsAndVisuals);
 
-            // Window resize listener
             let resizeTimeout;
             window.addEventListener('resize', () => {
                 clearTimeout(resizeTimeout);
@@ -476,11 +499,8 @@
             });
 
             // --- Initial Setup ---
-            // Initial call to set up controls/visuals for the default number of rhythms
-            updateRhythmControlsAndVisuals();
-            // Initial call to set parameters and size visualization correctly
-            // updateAllParameters(); // This is called within updateRhythmControlsAndVisuals now
-            // handleResize(); // This is called within updateAllParameters now
+            updateRhythmControlsAndVisuals(); // Setup initial controls/visuals
+            // updateAllParameters & handleResize are called within updateRhythmControlsAndVisuals
 
         }); // End DOMContentLoaded
     </script>
