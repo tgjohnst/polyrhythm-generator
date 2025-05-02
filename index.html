@@ -3,13 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Polyrhythm Generator (Effects)</title>
+    <title>Polyrhythm Generator (Fullscreen)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         /* Custom styles */
+        html, body {
+             height: 100%; /* Ensure body takes full height */
+             margin: 0;
+             padding: 0;
+             background-color: black; /* Apply base background here */
+        }
         body {
             font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100%; /* Ensure body stretches */
         }
         .beat-dot {
             stroke: #eee;
@@ -19,19 +29,21 @@
         .beat-dot.playing {
            /* Styles applied via D3 transition */
         }
-        #visualization {
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        /* Visualization container styles */
+        #visualization-container {
+            position: relative; /* Needed for absolute positioning of button */
             width: 90%;
             max-width: 800px;
             aspect-ratio: 1 / 1;
-            margin: 1rem auto; /* Keep margin for spacing */
+            margin: 1rem auto;
+            transition: all 0.3s ease-in-out; /* Smooth transition for fullscreen */
         }
         #viz-svg {
+            display: block; /* Remove extra space below SVG */
             width: 100%;
             height: 100%;
             border-radius: 50%;
+            background-color: #1f2937; /* bg-gray-800 */
         }
         .path-circle {
             fill: none;
@@ -79,7 +91,7 @@
         /* Note Indicator Line */
         .note-indicator-line { stroke: #ffffff; stroke-width: 1.5px; opacity: 0.5; }
 
-        /* Transition for collapsible section height */
+        /* Collapsible section */
         #rhythm-controls-container {
             transition: max-height 0.5s ease-in-out, opacity 0.3s ease-in-out, margin-top 0.5s ease-in-out, padding-top 0.5s ease-in-out, padding-bottom 0.5s ease-in-out;
             overflow: hidden;
@@ -88,20 +100,65 @@
         #rhythm-controls-container.collapsed {
             max-height: 0; opacity: 0; margin-top: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important;
         }
-        /* Helper class to hide elements visually but keep them accessible */
-        .sr-only {
-            position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-            overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;
+        /* Screen reader only */
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
+        /* Github icon */
+        .github-icon { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: middle; margin-left: 0.25em; fill: currentColor; }
+
+        /* --- Fullscreen Styles --- */
+        body.fullscreen-active > *:not(#visualization-container) {
+            display: none !important; /* Hide everything except the viz container */
         }
-        /* Github icon style */
-        .github-icon {
-            display: inline-block;
-            width: 1.2em;
-            height: 1.2em;
-            vertical-align: middle;
-            margin-left: 0.25em;
-            fill: currentColor; /* Use text color */
+        #visualization-container:-webkit-full-screen { /* Safari */
+            width: 100%; height: 100%; max-width: none; margin: 0; padding: 0; background-color: #111827; /* bg-gray-900 */
         }
+        #visualization-container:fullscreen { /* Standard */
+            width: 100%; height: 100%; max-width: none; margin: 0; padding: 0; background-color: #111827; /* bg-gray-900 */
+        }
+        #visualization-container:-webkit-full-screen #viz-svg {
+             border-radius: 0; /* Square corners in fullscreen */
+             max-width: 100vh; /* Limit width to maintain aspect ratio based on height */
+             max-height: 100vw; /* Limit height based on width */
+             margin: auto; /* Center the SVG */
+        }
+         #visualization-container:fullscreen #viz-svg {
+             border-radius: 0;
+             max-width: 100vh;
+             max-height: 100vw;
+             margin: auto;
+        }
+
+        /* Fullscreen Toggle Button */
+        #fullscreen-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem;
+            background-color: rgba(55, 65, 81, 0.6); /* bg-gray-700 with opacity */
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 100; /* Ensure it's above SVG content */
+            /* *** MODIFIED: Set initial opacity to be visible *** */
+            opacity: 0.6; /* Default visibility */
+            transition: opacity 0.3s ease-in-out, background-color 0.3s ease-in-out;
+        }
+        /* *** MODIFIED: Hover effect increases opacity/changes bg slightly *** */
+        #fullscreen-button:hover {
+            opacity: 1;
+            background-color: rgba(75, 85, 99, 0.8); /* bg-gray-600 slightly more opaque */
+        }
+        /* Keep button fully visible when in fullscreen */
+        #visualization-container:-webkit-full-screen #fullscreen-button,
+        #visualization-container:fullscreen #fullscreen-button {
+            opacity: 1;
+        }
+        #fullscreen-button svg {
+            width: 1.5rem; /* 24px */
+            height: 1.5rem;
+            fill: #e5e7eb; /* gray-200 */
+        }
+
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -111,9 +168,17 @@
 
     <h1 class="text-3xl font-bold text-gray-100 mb-6">Polyrhythm Generator</h1>
 
-    <div id="visualization">
+    <div id="visualization-container">
         <svg id="viz-svg" class="bg-gray-900 rounded-full">
              </svg>
+         <button id="fullscreen-button" title="Toggle Fullscreen">
+             <svg id="fullscreen-enter-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                 <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+             </svg>
+             <svg id="fullscreen-exit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="display: none;">
+                 <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
+             </svg>
+         </button>
     </div>
 
     <div id="controls" class="mt-6 p-6 bg-gray-800 rounded-lg shadow-md w-full max-w-4xl flex flex-col items-center space-y-4">
@@ -319,8 +384,7 @@
 
             // --- Parameters ---
             let tempo = 3.0; let volume = 0.5;
-            // *** MODIFIED: Default numActiveRhythms ***
-            let numActiveRhythms = 16;
+            let numActiveRhythms = 16; // Default to 16
             let soundType1 = 'sine'; let soundType2 = 'square'; let soundType3 = 'sawtooth';
             let soundType2Enabled = false; let soundType3Enabled = false;
             let noteSustainTime = 0.05;
@@ -360,8 +424,11 @@
             const filterEnabledCheckbox = document.getElementById('filterEnabled');
             const filterFreqSlider = document.getElementById('filterFreq'); const filterFreqValueSpan = document.getElementById('filterFreqValue');
             const filterQSlider = document.getElementById('filterQ'); const filterQValueSpan = document.getElementById('filterQValue');
-            // *** ADDED: Copyright Notice reference ***
             const copyrightNotice = document.getElementById('copyright-notice');
+            const vizContainer = document.getElementById('visualization-container');
+            const fullscreenButton = document.getElementById('fullscreen-button');
+            const fullscreenEnterIcon = document.getElementById('fullscreen-enter-icon');
+            const fullscreenExitIcon = document.getElementById('fullscreen-exit-icon');
 
 
             // --- Helper Functions ---
@@ -495,9 +562,7 @@
 
             // --- Scheduler ---
             function scheduleNotes() {
-                // *** ADDED: Check for mute period ***
-                if (adjustmentMuteTimeoutId) return; // Don't schedule notes during mute period
-
+                if (adjustmentMuteTimeoutId) return;
                 if (!isPlaying || !audioContext) return;
                 const currentTime = audioContext.currentTime;
                 for (let i = 0; i < numActiveRhythms; i++) {
@@ -518,7 +583,7 @@
             // --- Control Logic ---
             function start() {
                 if (isPlaying) return; if (!initAudioContext()) return;
-                clearTimeout(adjustmentMuteTimeoutId); adjustmentMuteTimeoutId = null; // Clear mute on explicit start
+                clearTimeout(adjustmentMuteTimeoutId); adjustmentMuteTimeoutId = null;
 
                 isPlaying = true; startStopButton.textContent = 'Stop';
                 startStopButton.classList.remove('bg-green-600', 'hover:bg-green-700', 'focus:ring-green-500');
@@ -533,7 +598,7 @@
             }
             function stop() {
                 if (!isPlaying) return;
-                clearTimeout(adjustmentMuteTimeoutId); adjustmentMuteTimeoutId = null; // Clear mute on explicit stop
+                clearTimeout(adjustmentMuteTimeoutId); adjustmentMuteTimeoutId = null;
 
                 isPlaying = false; startStopButton.textContent = 'Start';
                 startStopButton.classList.remove('bg-red-600', 'hover:bg-red-700', 'focus:ring-red-500');
@@ -546,13 +611,62 @@
             }
 
             // --- Resize Handling ---
-            function handleResize() { /* ... (no changes) ... */ width = svgElement.clientWidth; height = svgElement.clientHeight; baseRadius = Math.min(width, height) / 2 * 0.9; center = { x: width / 2, y: height / 2 }; vizGroup.attr("transform", `translate(${center.x}, ${center.y})`); noteIndicatorLine.attr("x1", 0).attr("y1", 0).attr("x2", baseRadius * 1.02).attr("y2", 0); for (let i = 0; i < numActiveRhythms; i++) { const param = rhythmParams[i]; if (param) { param.radius = calculateRadius(i, numActiveRhythms); if (param.path) param.path.attr("r", param.radius); if (param.dot) param.dot.attr("cx", param.radius); } } if (isPlaying && animationFrameId) { animateVisuals(); } else { vizGroup.selectAll(".beat-dot.dynamic-viz").attr("transform", "rotate(0)"); } }
+            function handleResize() {
+                 width = svgElement.clientWidth; height = svgElement.clientHeight;
+                 const isFullscreen = !!document.fullscreenElement;
+                 const containerWidth = isFullscreen ? window.innerWidth : width;
+                 const containerHeight = isFullscreen ? window.innerHeight : height;
+
+                 baseRadius = Math.min(containerWidth, containerHeight) / 2 * (isFullscreen ? 0.95 : 0.9);
+                 center = { x: containerWidth / 2, y: containerHeight / 2 };
+
+                 // Adjust SVG size and position if NOT using the :fullscreen CSS approach fully
+                 // svg.attr("width", containerWidth).attr("height", containerHeight);
+
+                 vizGroup.attr("transform", `translate(${center.x}, ${center.y})`);
+                 noteIndicatorLine.attr("x1", 0).attr("y1", 0).attr("x2", baseRadius * 1.02).attr("y2", 0);
+
+                 for (let i = 0; i < numActiveRhythms; i++) {
+                     const param = rhythmParams[i];
+                     if (param) {
+                          param.radius = calculateRadius(i, numActiveRhythms);
+                          if (param.path) param.path.attr("r", param.radius);
+                          if (param.dot) param.dot.attr("cx", param.radius);
+                     }
+                 }
+                 if (isPlaying && animationFrameId) { animateVisuals(); }
+                 else { vizGroup.selectAll(".beat-dot.dynamic-viz").attr("transform", "rotate(0)"); }
+             }
 
             // --- Theme Change Handler ---
             function handleThemeChange() { /* ... (no changes) ... */ currentThemeName = colorThemeSelect.value; console.log("Theme changed to:", currentThemeName); updateRhythmStyles(); }
 
             // --- Collapse Handler ---
             function toggleControlsCollapse() { /* ... (no changes) ... */ const isCollapsed = rhythmControlsContainer.classList.toggle('collapsed'); collapseArrow.style.transform = isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'; }
+
+            // --- Fullscreen Handler ---
+            function toggleFullscreen() {
+                if (!document.fullscreenElement) {
+                    vizContainer.requestFullscreen().catch(err => {
+                        alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                    });
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
+                }
+            }
+
+            // Update UI based on fullscreen state changes (e.g., user pressing ESC)
+            function handleFullscreenChange() {
+                const isFullscreen = !!document.fullscreenElement;
+                document.body.classList.toggle('fullscreen-active', isFullscreen);
+                fullscreenEnterIcon.style.display = isFullscreen ? 'none' : 'block';
+                fullscreenExitIcon.style.display = isFullscreen ? 'block' : 'none';
+                // Trigger resize after a short delay to ensure dimensions are updated
+                setTimeout(handleResize, 50);
+            }
+
 
             // --- Event Listeners ---
             startStopButton.addEventListener('click', () => isPlaying ? stop() : start());
@@ -577,14 +691,15 @@
             filterEnabledCheckbox.addEventListener('change', updateAllParameters);
             filterFreqSlider.addEventListener('input', updateAllParameters);
             filterQSlider.addEventListener('input', updateAllParameters);
+            fullscreenButton.addEventListener('click', toggleFullscreen);
+            document.addEventListener('fullscreenchange', handleFullscreenChange);
+            document.addEventListener('webkitfullscreenchange', handleFullscreenChange); // Safari
 
             let resizeTimeout;
             window.addEventListener('resize', () => { clearTimeout(resizeTimeout); resizeTimeout = setTimeout(handleResize, 100); });
 
             // --- Initial Setup ---
-            // *** ADDED: Set current year in copyright ***
             copyrightNotice.textContent = `© ${new Date().getFullYear()} Polyrhythm Generator`;
-
             soundType2EnabledCheckbox.checked = soundType2Enabled;
             soundType3EnabledCheckbox.checked = soundType3Enabled;
             echoEnabledCheckbox.checked = echoEnabled;
